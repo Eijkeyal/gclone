@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/rauni5/gclone/internal/adapters"
@@ -19,10 +20,55 @@ func AnalyzeProject(root string) *project.Project {
 	for _, a := range adapters.All() {
 		a.Analyze(p, root)
 	}
+	detectPortConflicts(p)
 	p.Composes = compose.FindComposes(root, p.Pkgs)
 	p.Needs = services.DetectNeeds(p)
 	p.OtherStacks = findOtherStacks(root, handledMarkers(p))
 	return p
+}
+
+func detectPortConflicts(p *project.Project) {
+	ports := make(map[string][]string)
+
+	for _, pkg := range p.Pkgs {
+		port := project.PortFor(pkg)
+		if port == "" {
+			continue
+		}
+
+		// Remove the display annotation added by PortFor.
+		port, _, _ = strings.Cut(port, " (from PORT)")
+
+		// Only compare valid port numbers.
+		n, err := strconv.Atoi(port)
+		if err != nil || n < 1 || n > 65535 {
+			continue
+		}
+
+		ports[port] = append(ports[port], pkg.Rel)
+	}
+
+	var detectedPorts []string
+
+	for port := range ports {
+		detectedPorts = append(detectedPorts, port)
+	}
+
+	sort.Strings(detectedPorts)
+
+	for _, port := range detectedPorts {
+		packages := ports[port]
+
+		if len(packages) > 1 {
+			p.Warnings = append(p.Warnings,
+				fmt.Sprintf(
+					"Multiple packages expect port %s: %s. They cannot run simultaneously on the same host without changing a port.",
+					port,
+					strings.Join(packages, ", "),
+				),
+			)
+		}
+	}
 }
 
 var otherMarkers = map[string]string{
