@@ -38,7 +38,7 @@ func TestAdaptersOnMixedRepository(t *testing.T) {
 		a.Analyze(p, root)
 		got[a.Name()] = a.Units(p)
 	}
-	want := map[string]int{"Node.js": 1, "Go": 1, "Java": 1, "Python": 2}
+	want := map[string]int{"Node.js": 1, "Go": 1, "Java": 1, "Python": 4}
 	for k, v := range want {
 		if got[k] != v {
 			t.Errorf("%s: got %d projects, want %d", k, got[k], v)

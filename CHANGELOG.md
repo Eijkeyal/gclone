@@ -9,6 +9,8 @@ include breaking changes.
 
 ### Added
 
+- Flask and FastAPI `create_app()` factory detection in the usual entry files, with
+  Flask's `--app module:create_app` and Uvicorn's `--factory` start commands (#26).
 - Python adapter: Django, FastAPI, Flask and Streamlit, with pip, Poetry, uv or Pipenv. pip
   projects get a `.venv` inside the project (never the system Python). It reads the wanted
   Python version, `.env.example`, database needs (including SQLAlchemy URLs such as
