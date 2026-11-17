@@ -29,6 +29,7 @@ include breaking changes.
 - Node.js, Python, Go and Java now implement one shared `Adapter` interface, so adding an ecosystem
   no longer means editing every stage. The "Detected:" list is now in the order Node.js, Python,
   Go, Java, and the guide says "This repo has N projects" across all ecosystems.
+- Hint for python3 -m venv failing without python3-venv
 
 ## [0.1.1] - 2026-11-14
 
