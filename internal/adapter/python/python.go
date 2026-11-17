@@ -219,6 +219,7 @@ func Manager(dir, pyproject string) string {
 var (
 	fastapiRe = regexp.MustCompile(`(?m)^(\w+)\s*(?::[^=]+)?=\s*FastAPI\(`)
 	flaskRe   = regexp.MustCompile(`(?m)^(\w+)\s*(?::[^=]+)?=\s*Flask\(`)
+	factoryRe = regexp.MustCompile(`(?m)^def[ \t]+create_app[ \t]*\([ \t]*\)[ \t]*(?:->[ \t]*[^:\r\n]+)?[ \t]*:`)
 	envUse    = []*regexp.Regexp{
 		regexp.MustCompile(`os\.environ\[\s*['"]([A-Za-z_][A-Za-z0-9_]*)['"]\s*\]`),
 		regexp.MustCompile(`os\.environ\.get\(\s*['"]([A-Za-z_][A-Za-z0-9_]*)['"]\s*\)`),
@@ -233,9 +234,10 @@ var (
 	}
 )
 
-// appTarget finds "module:variable" for an app object created by the pattern re, looking in
-// the usual entry files.
-func appTarget(dir string, re *regexp.Regexp) (module, variable, file string) {
+// appTarget prefers app objects in the usual entry files, preserving their search order.
+// If none is found, it falls back to the first top-level, no-argument create_app factory.
+// This is a static heuristic: it never imports or runs project code.
+func appTarget(dir string, re *regexp.Regexp) (module, variable, file string, factory bool) {
 	for _, f := range []string{"main.py", "app.py", "server.py", "api.py", "wsgi.py", "app/main.py", "app/app.py", "src/main.py", "src/app.py", "src/app/main.py"} {
 		b, err := os.ReadFile(filepath.Join(dir, f))
 		if err != nil {
@@ -243,10 +245,14 @@ func appTarget(dir string, re *regexp.Regexp) (module, variable, file string) {
 		}
 		if m := re.FindSubmatch(b); m != nil {
 			mod := strings.ReplaceAll(strings.TrimSuffix(f, ".py"), "/", ".")
-			return mod, string(m[1]), f
+			return mod, string(m[1]), f, false
+		}
+		if !factory && factoryRe.Match(b) {
+			module = strings.ReplaceAll(strings.TrimSuffix(f, ".py"), "/", ".")
+			variable, file, factory = "create_app", f, true
 		}
 	}
-	return "", "", ""
+	return
 }
 
 // Analyze reads one Python project. interpreter is the installed Python's version, or "".
@@ -290,16 +296,19 @@ func Analyze(root, dir, interpreter string) *project.PyProject {
 			y.StartNote = "Django project without manage.py, start it as the README says"
 		}
 	case "FastAPI":
-		if mod, v, _ := appTarget(dir, fastapiRe); mod != "" {
+		if mod, v, _, factory := appTarget(dir, fastapiRe); mod != "" {
 			y.Start = []string{"-m", "uvicorn", mod + ":" + v, "--port", "8000"}
+			if factory {
+				y.Start = append(y.Start, "--factory")
+			}
 		} else {
-			y.StartNote = "could not find the FastAPI app object (looked in main.py, app.py and app/main.py)"
+			y.StartNote = "could not find the FastAPI app object or create_app() factory (looked in main.py, app.py and app/main.py)"
 		}
 	case "Flask":
-		if mod, v, _ := appTarget(dir, flaskRe); mod != "" {
+		if mod, v, _, _ := appTarget(dir, flaskRe); mod != "" {
 			y.Start = []string{"-m", "flask", "--app", mod + ":" + v, "run", "--port", "5000"}
 		} else {
-			y.StartNote = "could not find the Flask app object (looked in app.py, main.py and app/)"
+			y.StartNote = "could not find the Flask app object or create_app() factory (looked in app.py, main.py and app/)"
 		}
 	case "Streamlit":
 		for _, f := range []string{"streamlit_app.py", "app.py", "main.py"} {
