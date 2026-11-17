@@ -25,6 +25,7 @@ func TestRules(t *testing.T) {
 		{"docker", "pull access denied for example/app", "docker-pull"},
 		{"tls", "SELF_SIGNED_CERT_IN_CHAIN", "tls-intercept"},
 		{"disk", "ENOSPC: no space left on device", "disk"},
+		{"venv", "The virtual environment was not created successfully because ensurepip is not\navailable.  On Debian/Ubuntu systems, you need to install the python3-venv\npackage using the following command.", "python-venv-missing"},
 	}
 	for _, c := range cases {
 		h, ok := For(c.out)
