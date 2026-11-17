@@ -19,6 +19,7 @@ import (
 	"github.com/rauni5/gclone/internal/project"
 	"github.com/rauni5/gclone/internal/repos"
 	"github.com/rauni5/gclone/internal/services"
+	"github.com/rauni5/gclone/internal/state"
 	"github.com/rauni5/gclone/internal/ui"
 	"github.com/rauni5/gclone/internal/verify"
 )
@@ -29,6 +30,7 @@ Usage:
   gclone <repo-url | user/repo | local-path> [directory] [options]
   gclone setup [directory] [options]     set up a repo that is already cloned
   gclone verify [directory] [options]    build it, start it, check it answers; exit 1 if not ready
+  gclone status [directory]              show what gclone did here and what is out of date
 
 Options:
   -n, --dry-run         Clone and analyze, show the plan, run nothing else
@@ -43,6 +45,7 @@ Options:
       --no-deps         Do not look for other repositories this project needs
       --verify          Run the verification after setup without asking
       --no-build        Skip the build step when verifying
+      --resume          With setup: skip install steps that already succeeded at this commit
       --timeout=SECONDS How long verify waits for the app to listen (default 60)
   -v, --version         Print the version
   -h, --help            Print this help
@@ -79,6 +82,8 @@ func parseArgs(args []string) (project.Options, error) {
 			o.Verify = true
 		case "--no-build":
 			o.NoBuild = true
+		case "--resume":
+			o.Resume = true
 		case "-v", "--version":
 			fmt.Println("gclone", buildinfo.Version)
 			os.Exit(0)
@@ -100,9 +105,10 @@ func parseArgs(args []string) (project.Options, error) {
 			pos = append(pos, a)
 		}
 	}
-	if len(pos) > 0 && (pos[0] == "setup" || pos[0] == "verify") {
+	if len(pos) > 0 && (pos[0] == "setup" || pos[0] == "verify" || pos[0] == "status") {
 		o.Setup = pos[0] == "setup"
 		o.VerifyCmd = pos[0] == "verify"
+		o.StatusCmd = pos[0] == "status"
 		o.Dir = "."
 		if len(pos) == 2 {
 			o.Dir = pos[1]
@@ -135,6 +141,13 @@ func Main() {
 }
 
 func run(o project.Options) error {
+	if o.StatusCmd {
+		abs, err := filepath.Abs(o.Dir)
+		if err != nil {
+			return err
+		}
+		return state.Print(os.Stdout, abs)
+	}
 	if _, err := exec.LookPath("git"); err != nil {
 		return fmt.Errorf("git was not found in PATH")
 	}
@@ -208,6 +221,19 @@ func setupRepo(abs string, o project.Options, depth int) (*project.Project, erro
 	}
 
 	steps := plan.BuildPlan(p, o)
+	if o.Resume {
+		prev, _ := state.Load(abs)
+		var skipped []project.Step
+		var why string
+		steps, skipped, why = state.Resume(prev, p.Commit, steps)
+		if why != "" {
+			fmt.Println("\nResume: running everything, because " + why + ".")
+		}
+		for _, s := range skipped {
+			fmt.Printf("\n[skip] %s (in %s): already done in an earlier run\n", s.Name, s.Where)
+		}
+		p.Steps = append(p.Steps, skipped...)
+	}
 	plan.PrintPlan(p, steps, o)
 	services.PrintNeeds(p, o)
 	repos.PrintCompanions(p)
@@ -231,6 +257,9 @@ func setupRepo(abs string, o project.Options, depth int) (*project.Project, erro
 		if o.Verify || ui.AskYesNo("\nVerify now? This builds the project, starts it for a few seconds and checks that it answers.", false) {
 			p.Verify = verify.RunVerify(p, o)
 		}
+	}
+	if err := state.Save(abs, state.FromProject(p)); err != nil {
+		fmt.Printf("[warn] could not write %s: %v\n", state.Path(abs), err)
 	}
 	path, err := guide.WriteGuide(p)
 	if err != nil {

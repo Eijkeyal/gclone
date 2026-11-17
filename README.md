@@ -18,8 +18,8 @@ starting a database, and discovering that the backend lives in a different repos
 **asks before it changes anything on your machine**, sets it up, checks that the app
 really starts, and writes a `SETUP_GUIDE.md` that says what is left for you to decide.
 
-> **Status: early (v0.1).** Node.js projects, plus early Java (Maven, Gradle, Spring Boot) and Go
-> support. Flutter and Python are detected and reported but not set up yet. See [what works today](#supported-today) and the
+> **Status: early (v0.1).** Node.js projects, plus early Python (Django, FastAPI, Flask, Streamlit),
+> Java (Maven, Gradle, Spring Boot) and Go support. Flutter is detected and reported but not set up yet. See [what works today](#supported-today) and the
 > [roadmap](#roadmap). Feedback from real repositories is the most useful thing you can give.
 
 ## Demo
@@ -101,6 +101,11 @@ The generated guide tells you what to do next:
   one request and stops it. Exit code 1 means not ready, so it works in CI.
 - **A guide, not just side effects.** `SETUP_GUIDE.md` records what ran, how to start each
   part, what to change, and the verification result. It is excluded from `git status`.
+- **A record and a way to resume.** gclone writes `.gclone/state.json` (excluded from
+  `git status`) with the steps it ran, the services the project needs and the last
+  verification. `gclone status` shows it and what is out of date, and
+  `gclone setup --resume` skips install steps that already succeeded at the same commit.
+  The file holds names, commands and notes only, never variable values.
 - **Dry run and safety prompts.** See [Safety](#safety-and-security).
 
 ### Experimental
@@ -118,9 +123,8 @@ These are implemented but have only been exercised in limited ways. Please repor
 
 ### Planned
 
-See the [roadmap](#roadmap): Java and Flutter support, a state file so re-runs skip finished
-steps, plain-language explanations for common errors, and reuse of existing `mise.toml`,
-Dev Container or Makefile setups.
+See the [roadmap](#roadmap): Flutter support, `--ci` and `--json` output, and
+reuse of existing `mise.toml`, Dev Container or Makefile setups.
 
 ## Install
 
@@ -175,6 +179,7 @@ Set up a repository you already cloned, then check that it runs:
 cd app
 gclone setup
 gclone verify
+gclone status      # what was done, what failed, what is out of date
 ```
 
 **What happens behind the scenes**
@@ -196,13 +201,14 @@ gclone verify
 | Node.js with npm | Tested end to end: clone, install, `.env`, verify |
 | Node.js with pnpm, yarn, bun | Detected and invoked, not tested on real projects |
 | Java: Maven, Gradle, Spring Boot | Reads the build file (Java version, Spring Boot), uses `mvnw`/`gradlew` or `mvn`/`gradle`, reads `application.properties` / `application.yml` (port, database URL, settings that need values), detects PostgreSQL, MySQL/MariaDB, MongoDB and Redis, runs a dependency download, and `verify` builds and starts Spring Boot. **Detection is unit-tested; the real build and start have not been run end to end yet** (no access to Maven Central in my test environment), and Gradle commands are untested. Please report what happens on your projects |
+| Python: Django, FastAPI, Flask, Streamlit | Finds `requirements.txt`, `pyproject.toml`, `Pipfile` or `setup.py`, picks pip, Poetry, uv or Pipenv from the lock file, and reads the wanted Python version (`.python-version`, `requires-python`, Poetry, Pipfile, `runtime.txt`). For pip it creates a `.venv` inside the project and installs into it, never into your system Python. Finds the web framework and its start command (`manage.py runserver`, `uvicorn`, `flask run`, `streamlit run`) and default port, reads `.env.example`, detects PostgreSQL, MySQL, MongoDB and Redis from dependencies and URLs, and `verify` starts the app and checks it answers. **Tested end to end with a real Flask project** (venv, pip install, start, HTTP 200); Django, FastAPI, Streamlit, Poetry, uv and Pipenv are covered by detection tests only |
 | Failure hints | A list of about 20 common failures (npm conflicts, missing build tools, port in use, wrong Java or Go version, registry login, network and proxy). It is a best guess from the output and says so. Unknown errors get no hint |
 | Go modules | `go.mod` read, installed Go compared with the `go` / `toolchain` line, `go mod download`, build check in `verify`. Nothing is started. Tested on gclone itself and one small fixture |
 | Node version check | `.nvmrc`, `.node-version`, `.tool-versions`, `engines`. It warns, it does not switch versions (use nvm, fnm or mise for that) |
 | Repository layout | Root plus one folder level. Workspaces are analyzed at the root only |
 | MongoDB, PostgreSQL, MySQL, Redis, RabbitMQ | Detection tested. Starting them in Docker tested with a stand-in `docker` command, not with a real Docker engine |
 | Compose files | Database services only (postgres, mysql, mariadb, mongo, redis, valkey, rabbitmq). It never starts your app's own containers |
-| Java (Maven, Gradle), Flutter, Python, Go, Rust, PHP, Ruby | Detected and reported only. No setup yet |
+| Flutter, Rust, PHP, Ruby | Detected and reported only. No setup yet |
 
 ## How it works
 
@@ -220,7 +226,7 @@ flowchart LR
 | Component | Package | Job |
 |---|---|---|
 | CLI and flow | `internal/cli` | Argument parsing, `setupRepo`, prompts |
-| Detection | `internal/analyze`, `internal/adapter/node`, `internal/adapter/golang`, `internal/adapter/java`, `internal/envfile`, `internal/compose` | Packages, package manager, Node version, env files, compose files |
+| Detection | `internal/analyze`, `internal/adapter/node`, `internal/adapter/golang`, `internal/adapter/java`, `internal/adapter/python`, `internal/envfile`, `internal/compose` | Packages, package manager, Node version, env files, compose files |
 | Plan and execute | `internal/plan` | Builds the list of steps, runs them |
 | Services | `internal/services`, `internal/docker`, `internal/installer` | Needed databases, Docker states, install and start options |
 | Other repositories | `internal/repos` | Finds, asks about and sets up dependent repositories |
@@ -245,10 +251,12 @@ gclone has **no configuration file**. Behaviour is controlled with flags.
 | `--no-deps` | Do not look for other repositories |
 | `--verify` | Run the verification after setup without asking |
 | `--no-build` | Skip the build step when verifying |
+| `--resume` | With `setup`: skip install steps that already succeeded at the same commit |
 | `--timeout=SECONDS` | How long verify waits for the app to listen (default 60) |
 | `-v`, `--version` / `-h`, `--help` | Version / help |
 
-Commands: `gclone <repo> [directory]`, `gclone setup [directory]`, `gclone verify [directory]`.
+Commands: `gclone <repo> [directory]`, `gclone setup [directory]`, `gclone verify [directory]`,
+`gclone status [directory]` (exit code 1 when a step or the last verification failed).
 
 ## Safety and security
 
@@ -286,14 +294,11 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
 Priorities, in order. Dates are deliberately absent.
 
 **Next**
-- A generic adapter interface, then **Java (Maven/Gradle, Spring Boot)** and **Flutter**
-- A state file (`.gclone/`) so re-runs skip steps that are already done, plus `gclone status`
-- Plain-language explanations for common failures (wrong Node version, native module build
-  errors, port in use, registry login)
+- **Flutter** (the adapter interface is in place, see `docs/ARCHITECTURE.md`)
+- Deeper Java checks: a real end-to-end run of Maven and Gradle builds
 - `--ci` and `--json` output, integration tests with fixture repositories
 
 **Then**
-- Python (venv, pip, poetry)
 - Reuse an existing `mise.toml`, `.tool-versions`, Dev Container or Makefile `setup` target
 - `gclone doctor`, port conflict detection, `gclone export devcontainer`
 

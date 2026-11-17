@@ -26,7 +26,7 @@ func TestAdaptersOnEmptyProject(t *testing.T) {
 	}
 }
 
-// A repository with all three ecosystems is picked up by the matching adapter each.
+// A repository with every ecosystem is picked up by the matching adapter each.
 func TestAdaptersOnMixedRepository(t *testing.T) {
 	root, err := filepath.Abs(filepath.Join("..", "..", "testdata"))
 	if err != nil {
@@ -38,7 +38,7 @@ func TestAdaptersOnMixedRepository(t *testing.T) {
 		a.Analyze(p, root)
 		got[a.Name()] = a.Units(p)
 	}
-	want := map[string]int{"Node.js": 1, "Go": 1, "Java": 1}
+	want := map[string]int{"Node.js": 1, "Go": 1, "Java": 1, "Python": 2}
 	for k, v := range want {
 		if got[k] != v {
 			t.Errorf("%s: got %d projects, want %d", k, got[k], v)

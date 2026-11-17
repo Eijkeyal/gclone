@@ -72,9 +72,10 @@ func (Adapter) Install(p *project.Project, o project.Options) []project.Planned 
 		j := j
 		argv := Argv(j, DependencyGoals(j)...)
 		steps = append(steps, project.Planned{
-			Where: j.Rel,
-			Name:  "Download Java dependencies (" + j.Build + ")",
-			Cmd:   Display(j, DependencyGoals(j)...),
+			Where:     j.Rel,
+			Name:      "Download Java dependencies (" + j.Build + ")",
+			Resumable: true,
+			Cmd:       Display(j, DependencyGoals(j)...),
 			Run: func() error {
 				if _, err := exec.LookPath("java"); err != nil {
 					return fmt.Errorf("java was not found in PATH, install a JDK from https://adoptium.net/")

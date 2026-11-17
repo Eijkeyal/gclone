@@ -68,9 +68,10 @@ func (Adapter) Install(p *project.Project, o project.Options) []project.Planned 
 	for _, m := range p.GoModules {
 		m := m
 		steps = append(steps, project.Planned{
-			Where: m.Rel,
-			Name:  "Download Go modules",
-			Cmd:   "go mod download",
+			Where:     m.Rel,
+			Name:      "Download Go modules",
+			Resumable: true,
+			Cmd:       "go mod download",
 			Run: func() error {
 				if _, err := exec.LookPath("go"); err != nil {
 					return fmt.Errorf("go was not found in PATH, install it from https://go.dev/dl/")

@@ -90,6 +90,17 @@ func schemeKind(scheme string) string {
 // parseServiceURL returns the service kind and the parsed URL. The URL is nil
 // when the value looks like a service URL but cannot be parsed (for example a
 // MongoDB replica set list).
+var driverRe = regexp.MustCompile(`^(postgres(?:ql)?|mysql|mariadb|sqlite)\+\w+://`)
+
+// normalizeURL removes a "jdbc:" prefix and a SQLAlchemy-style driver suffix, so
+// "postgresql+psycopg2://..." reads as "postgresql://...".
+func normalizeURL(v string) string {
+	v = strings.TrimPrefix(v, "jdbc:")
+	return driverRe.ReplaceAllStringFunc(v, func(m string) string {
+		return m[:strings.Index(m, "+")] + "://"
+	})
+}
+
 func parseServiceURL(val string) (string, *url.URL) {
 	m := urlSchemeRe.FindStringSubmatch(strings.ToLower(strings.TrimSpace(val)))
 	if m == nil {
@@ -139,7 +150,7 @@ func DetectNeeds(p *project.Project) []*project.Need {
 			}
 		}
 		for _, v := range vars {
-			kind, u := parseServiceURL(strings.TrimPrefix(v.Value, "jdbc:"))
+			kind, u := parseServiceURL(normalizeURL(v.Value))
 			if kind == "" {
 				continue
 			}
@@ -170,6 +181,9 @@ func DetectNeeds(p *project.Project) []*project.Need {
 	}
 	for _, pkg := range p.Pkgs {
 		scan(pkg.Rel, pkg.DepKinds, pkg.EnvVars)
+	}
+	for _, y := range p.PyProjects {
+		scan(y.Rel, y.DepKinds, y.EnvVars)
 	}
 	for _, j := range p.JavaProjects {
 		scan(j.Rel, j.DepKinds, j.Config)

@@ -103,9 +103,10 @@ func (Adapter) Install(p *project.Project, o project.Options) []project.Planned 
 		pkg := pkg
 		name, args := InstallCmd(pkg, o.IgnoreScripts)
 		step := project.Planned{
-			Where: pkg.Rel,
-			Name:  "Install dependencies (" + pkg.PM + ")",
-			Cmd:   name + " " + strings.Join(args, " "),
+			Where:     pkg.Rel,
+			Name:      "Install dependencies (" + pkg.PM + ")",
+			Resumable: true,
+			Cmd:       name + " " + strings.Join(args, " "),
 			Run: func() error {
 				if _, err := exec.LookPath(name); err != nil {
 					return fmt.Errorf("%s was not found in PATH (try: corepack enable)", name)
@@ -119,7 +120,7 @@ func (Adapter) Install(p *project.Project, o project.Options) []project.Planned 
 				fb = append(fb, "--ignore-scripts")
 			}
 			step.Fallback = func() error { return proc.RunStream(pkg.Dir, false, "npm", fb...) }
-			step.FallbackNote = "npm ci failed (lockfile out of sync?), so npm install was used instead"
+			step.FallbackNote = npmCIFallbackNote()
 		}
 		steps = append(steps, step)
 	}
@@ -276,4 +277,10 @@ func describe(v project.EnvVar) string {
 		return v.Reason + ". Note from the example file: " + v.Comment
 	}
 	return v.Reason
+}
+
+// npmCIFallbackNote is shown, and recorded in the guide, when npm ci fails and gclone falls
+// back to npm install.
+func npmCIFallbackNote() string {
+	return "npm ci failed because the lockfile may be out of sync, so gclone used npm install instead. If this is your repository, commit the updated lockfile. If not, tell the maintainers."
 }

@@ -35,3 +35,26 @@ func CopyFile(src, dst string) error {
 	}
 	return os.WriteFile(dst, b, 0o600)
 }
+
+// ExcludeFromGit keeps a generated file or folder out of `git status` by listing it in
+// .git/info/exclude, which is local to this clone and never committed.
+func ExcludeFromGit(dir, name string) {
+	info := filepath.Join(dir, ".git", "info")
+	if err := os.MkdirAll(info, 0o755); err != nil {
+		return
+	}
+	path := filepath.Join(info, "exclude")
+	b, _ := os.ReadFile(path)
+	if strings.Contains(string(b), name) {
+		return
+	}
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	if len(b) > 0 && !strings.HasSuffix(string(b), "\n") {
+		_, _ = f.WriteString("\n")
+	}
+	_, _ = f.WriteString(name + "\n")
+}

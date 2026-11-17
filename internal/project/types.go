@@ -83,6 +83,33 @@ type JavaProject struct {
 	Warnings       []string
 }
 
+// PyProject is one Python project: a folder with requirements.txt, pyproject.toml, a
+// Pipfile, setup.py or manage.py.
+type PyProject struct {
+	Dir          string
+	Rel          string
+	Name         string
+	Manager      string // pip, poetry, uv or pipenv
+	Requirements string // requirements file used by pip, empty when installing from pyproject or setup.py
+	Framework    string // Django, FastAPI, Flask, Streamlit or empty
+	Port         string
+	Start        []string // arguments after the Python interpreter, nil when unknown
+	StartNote    string   // why Start is empty
+	PyWanted     string   // lowest Python version the project asks for, "3.10"
+	PyUpper      string   // Python version it does not support from, "3.13"
+	PySource     string   // where PyWanted came from
+	PyInstalled  string   // installed Python, empty when none was found
+	HasVenv      bool
+	HasTests     bool
+	Pytest       bool
+	EnvExample   string
+	EnvCreated   bool
+	EnvVars      []EnvVar
+	MissingVars  []string
+	DepKinds     map[string]string
+	Warnings     []string
+}
+
 // Project is the analysed repository.
 type Project struct {
 	URL          string
@@ -93,6 +120,7 @@ type Project struct {
 	Pkgs         []*Pkg
 	GoModules    []*GoModule
 	JavaProjects []*JavaProject
+	PyProjects   []*PyProject
 	Composes     []*Compose
 	Needs        []*Need
 	Companions   []*Companion

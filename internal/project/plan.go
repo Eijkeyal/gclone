@@ -8,6 +8,7 @@ type Planned struct {
 	Run          func() error
 	Fallback     func() error
 	FallbackNote string
+	Resumable    bool // safe to skip on `setup --resume` when it already succeeded
 }
 
 // UnitLabel names a folder for people: "." becomes "repo root".

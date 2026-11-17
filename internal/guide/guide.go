@@ -9,6 +9,7 @@ import (
 
 	"github.com/rauni5/gclone/internal/adapters"
 	"github.com/rauni5/gclone/internal/buildinfo"
+	"github.com/rauni5/gclone/internal/fsx"
 	"github.com/rauni5/gclone/internal/project"
 	"github.com/rauni5/gclone/internal/repos"
 	"github.com/rauni5/gclone/internal/services"
@@ -165,28 +166,6 @@ func WriteGuide(p *project.Project) (string, error) {
 	if err := os.WriteFile(path, []byte(b.String()), 0o644); err != nil {
 		return "", err
 	}
-	excludeFromGit(p.Dir, project.GuideName)
+	fsx.ExcludeFromGit(p.Dir, project.GuideName)
 	return path, nil
-}
-
-// excludeFromGit keeps the generated guide out of `git status`.
-func excludeFromGit(dir, name string) {
-	info := filepath.Join(dir, ".git", "info")
-	if err := os.MkdirAll(info, 0o755); err != nil {
-		return
-	}
-	path := filepath.Join(info, "exclude")
-	b, _ := os.ReadFile(path)
-	if strings.Contains(string(b), name) {
-		return
-	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	if len(b) > 0 && !strings.HasSuffix(string(b), "\n") {
-		_, _ = f.WriteString("\n")
-	}
-	_, _ = f.WriteString(name + "\n")
 }
