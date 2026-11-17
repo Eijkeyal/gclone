@@ -111,8 +111,24 @@ var ignoredVars = map[string]bool{
 	"USER": true, "TZ": true, "DEBUG": true,
 }
 
-// scanEnvUsage finds environment variables that the source code reads.
+// Scanner says which files to read and which patterns find environment variables in them.
+type Scanner struct {
+	Exts     map[string]bool
+	Patterns []*regexp.Regexp
+	SkipDirs map[string]bool // folder names to skip, besides the common ones
+	Ignored  map[string]bool // variables that are never worth reporting
+}
+
+// JS is the scanner for JavaScript and TypeScript sources.
+var JS = Scanner{Exts: sourceExt, Patterns: envUseRe, Ignored: ignoredVars}
+
+// ScanEnvUsage finds environment variables that JavaScript or TypeScript code reads.
 func ScanEnvUsage(dir string, exclude []string) []string {
+	return JS.Scan(dir, exclude)
+}
+
+// Scan finds environment variables that the source code reads.
+func (sc Scanner) Scan(dir string, exclude []string) []string {
 	found := map[string]bool{}
 	files := 0
 	_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
@@ -121,7 +137,7 @@ func ScanEnvUsage(dir string, exclude []string) []string {
 		}
 		if d.IsDir() {
 			name := d.Name()
-			if path != dir && (fsx.SkipDirs[name] || strings.HasPrefix(name, ".")) {
+			if path != dir && (fsx.SkipDirs[name] || sc.SkipDirs[name] || strings.HasPrefix(name, ".")) {
 				return filepath.SkipDir
 			}
 			for _, ex := range exclude {
@@ -131,7 +147,7 @@ func ScanEnvUsage(dir string, exclude []string) []string {
 			}
 			return nil
 		}
-		if !sourceExt[strings.ToLower(filepath.Ext(path))] {
+		if !sc.Exts[strings.ToLower(filepath.Ext(path))] {
 			return nil
 		}
 		if files++; files > 5000 {
@@ -144,7 +160,7 @@ func ScanEnvUsage(dir string, exclude []string) []string {
 		if err != nil {
 			return nil
 		}
-		for _, re := range envUseRe {
+		for _, re := range sc.Patterns {
 			for _, m := range re.FindAllSubmatch(b, -1) {
 				found[string(m[1])] = true
 			}
@@ -153,7 +169,7 @@ func ScanEnvUsage(dir string, exclude []string) []string {
 	})
 	var out []string
 	for k := range found {
-		if !ignoredVars[k] {
+		if !sc.Ignored[k] {
 			out = append(out, k)
 		}
 	}

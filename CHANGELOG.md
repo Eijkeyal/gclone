@@ -7,11 +7,28 @@ include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- Python adapter: Django, FastAPI, Flask and Streamlit, with pip, Poetry, uv or Pipenv. pip
+  projects get a `.venv` inside the project (never the system Python). It reads the wanted
+  Python version, `.env.example`, database needs (including SQLAlchemy URLs such as
+  `postgresql+psycopg2://`), and `verify` starts the app. New failure hints for pip
+  (externally managed Python, `pg_config`, wheel build failures, no matching version).
+- `.gclone/state.json`: a record of the setup steps, the services the project needs and the
+  last verification, kept out of `git status`. It holds no variable values and no remote
+  login.
+- `gclone status [directory]` shows that record and whether the repository has moved since
+  setup. It exits with 1 when a step or the last verification failed.
+- `gclone setup --resume` skips install steps that already succeeded at the same commit.
+  Services are always started again.
+
 ### Changed
 
-- Node.js, Go and Java now implement one shared `Adapter` interface, so adding an ecosystem
-  no longer means editing every stage. The "Detected:" list is now in the order Node.js, Go,
-  Java, and the guide says "This repo has N projects" across all ecosystems.
+- The message shown when `npm ci` falls back to `npm install` now explains why and what to
+  do next (#11, thanks @dbdefault).
+- Node.js, Python, Go and Java now implement one shared `Adapter` interface, so adding an ecosystem
+  no longer means editing every stage. The "Detected:" list is now in the order Node.js, Python,
+  Go, Java, and the guide says "This repo has N projects" across all ecosystems.
 
 ## [0.1.1] - 2026-11-14
 

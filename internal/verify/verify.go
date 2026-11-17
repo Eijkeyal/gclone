@@ -22,6 +22,7 @@ import (
 	"github.com/rauni5/gclone/internal/proc"
 	"github.com/rauni5/gclone/internal/project"
 	"github.com/rauni5/gclone/internal/services"
+	"github.com/rauni5/gclone/internal/state"
 )
 
 var errNotReady = errors.New("verification failed: the project is not ready")
@@ -446,6 +447,9 @@ func VerifyCommand(abs string, o project.Options) error {
 	}
 	rep := RunVerify(p, o)
 	updateGuideVerification(abs, rep)
+	if err := state.RecordVerify(abs, p, rep); err != nil {
+		fmt.Printf("[warn] could not update %s: %v\n", state.Path(abs), err)
+	}
 	if rep.Verdict == "NOT READY" || rep.Verdict == "INTERRUPTED" {
 		return errNotReady
 	}

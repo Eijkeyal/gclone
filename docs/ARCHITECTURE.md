@@ -41,6 +41,17 @@ codebase. New detection should be testable with files in a temporary directory.
   the seam other ecosystems will use.
 - **`Report` / `Check`**: the verification result.
 
+## State
+
+`internal/state` writes `.gclone/state.json` after setup and after `gclone verify`. The format
+is its own set of structs with a `schema` number, so it can change without touching the
+data model. It never contains variable values, and a login in the remote address is removed.
+`gclone status` prints it and compares the recorded commit with the current one.
+`setup --resume` calls `state.Resume`, which skips a step only when the step is marked
+`Resumable` (the dependency installs), it succeeded before, and the repository is still at the
+same commit. Uncommitted edits are not detected. Steps are matched by name and folder, not by
+command, because `npm install` turns into `npm ci` once a lockfile exists.
+
 ## Invariants
 
 1. Ask before installing, starting, cloning or running project code. Risky prompts default
@@ -61,8 +72,8 @@ those paths as experimental.
 
 ## Adapters: one per ecosystem
 
-`internal/adapter/adapter.go` defines the `Adapter` interface. Node.js, Go and Java each
-implement it (`internal/adapter/node`, `golang`, `java`), and `internal/adapters` lists them.
+`internal/adapter/adapter.go` defines the `Adapter` interface. Node.js, Python, Go and Java each
+implement it (`internal/adapter/node`, `python`, `golang`, `java`), and `internal/adapters` lists them.
 The shared stages (`analyze`, `plan`, `verify`, `guide`, `cli`) loop over `adapters.All()` and
 do not know which ecosystems exist.
 
@@ -76,7 +87,7 @@ do not know which ecosystems exist.
 | `Next` | plan | Commands shown under "Next:" |
 | `Guide`, `GuideConfig` | guide | The "Run it" and "What you may need to change" Markdown |
 
-The ecosystems still keep their own list on `Project` (`Pkgs`, `GoModules`, `JavaProjects`).
+The ecosystems still keep their own list on `Project` (`Pkgs`, `PyProjects`, `GoModules`, `JavaProjects`).
 Folding those into one `Units` list is a later step. Some Node-only logic remains outside the
 adapter: docker compose handling, service detection from `package.json` hints and the
 "databases" section of the guide.

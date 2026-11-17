@@ -5,6 +5,6 @@ type Options struct {
 	CloneCompanions, NoCompanions                                      bool
 	Verify, VerifyCmd, NoBuild                                         bool
 	Timeout                                                            int
-	Setup                                                              bool
+	Setup, StatusCmd, Resume                                           bool
 	Url, Dir                                                           string
 }
