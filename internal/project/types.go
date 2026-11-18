@@ -86,6 +86,7 @@ type FlutterProject struct {
 	EnvVars          []EnvVar
 	BackendPorts     []string // ports of localhost / 10.0.2.2 addresses found in lib/
 	HasTests         bool
+	CodeGen          []string // code generation packages in pubspec.yaml (build_runner, freezed, ...)
 	Warnings         []string
 }
 
