@@ -86,6 +86,47 @@ func TestAnalyze(t *testing.T) {
 	}
 }
 
+func TestDartDefines(t *testing.T) {
+	d := t.TempDir()
+	write(t, d, ".vscode/launch.json", `{
+  // comment
+  "configurations": [{
+    "name": "dev",
+    "args": ["--dart-define=API_URL=https://example.test", "--dart-define", "SENTRY_DSN=abc", "--dart-define-from-file=config/dev.json"]
+  }]
+}`)
+	write(t, d, "config/dev.json", `{"MAPS_KEY": "secret-value", "API_URL": "x"}`)
+	write(t, d, "README.md", "flutter run --dart-define=STRIPE_KEY=pk_test
+")
+	names, files := DartDefines(d)
+	if strings.Join(names, ",") != "API_URL,MAPS_KEY,SENTRY_DSN,STRIPE_KEY" {
+		t.Errorf("names %v", names)
+	}
+	if strings.Join(files, ",") != "config/dev.json" {
+		t.Errorf("files %v", files)
+	}
+	for _, n := range names {
+		if strings.Contains(n, "secret") || strings.Contains(n, "pk_test") || strings.Contains(n, "example.test") {
+			t.Errorf("a value leaked into the names: %q", n)
+		}
+	}
+}
+
+func TestDartDefinesInGuide(t *testing.T) {
+	d := t.TempDir()
+	write(t, d, "pubspec.yaml", app)
+	write(t, d, "README.md", "run with --dart-define=API_URL=https://example.test
+")
+	p := &project.Project{Dir: d}
+	a := Adapter{}
+	a.Analyze(p, d)
+	cfg := strings.Join(a.GuideConfig(p), "
+")
+	if !strings.Contains(cfg, "`API_URL`") || strings.Contains(cfg, "example.test") {
+		t.Errorf("config section %q", cfg)
+	}
+}
+
 func TestMissingFlutterWarns(t *testing.T) {
 	d := t.TempDir()
 	write(t, d, "pubspec.yaml", app)

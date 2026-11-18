@@ -86,6 +86,8 @@ type FlutterProject struct {
 	EnvVars          []EnvVar
 	BackendPorts     []string // ports of localhost / 10.0.2.2 addresses found in lib/
 	HasTests         bool
+	DartDefines      []string // names (never values) passed with --dart-define, from launch.json and the README
+	DartDefineFiles  []string // files named by --dart-define-from-file, relative to the app
 	Warnings         []string
 }
 
