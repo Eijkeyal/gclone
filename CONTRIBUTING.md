@@ -39,6 +39,7 @@ internal/
   adapter/node/          Node.js: packages, package manager, Node version, runnables
   adapter/golang/        Go: go.mod, Go version check, build command
   adapter/java/          Java: Maven/Gradle, Spring Boot, application config, Java version
+  adapter/flutter/       Flutter: pubspec, Flutter/Dart version, pub get, Firebase and .env notes
   adapter/python/        Python: pip/Poetry/uv/Pipenv, Django/FastAPI/Flask/Streamlit, .venv
   compose/               docker compose file parsing
   envfile/               env example files: parse, classify, find variables used in code

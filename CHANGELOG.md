@@ -9,8 +9,11 @@ include breaking changes.
 
 ### Added
 
-- Flask and FastAPI `create_app()` factory detection in the usual entry files, with
-  Flask's `--app module:create_app` and Uvicorn's `--factory` start commands (#26).
+- Flutter adapter: finds Flutter apps, checks the installed Flutter and Dart against the
+  app, runs `flutter pub get`, creates `.env` from an example, and notes missing Firebase
+  files and a backend on `localhost`. `verify` runs `flutter analyze` (errors only) and does
+  not start the app. New failure hints for Dart SDK constraints, pub version solving and
+  Android licenses. Tested with a stand-in `flutter` command only.
 - Python adapter: Django, FastAPI, Flask and Streamlit, with pip, Poetry, uv or Pipenv. pip
   projects get a `.venv` inside the project (never the system Python). It reads the wanted
   Python version, `.env.example`, database needs (including SQLAlchemy URLs such as
@@ -28,10 +31,9 @@ include breaking changes.
 
 - The message shown when `npm ci` falls back to `npm install` now explains why and what to
   do next (#11, thanks @dbdefault).
-- Node.js, Python, Go and Java now implement one shared `Adapter` interface, so adding an ecosystem
+- Node.js, Python, Go, Java and Flutter now implement one shared `Adapter` interface, so adding an ecosystem
   no longer means editing every stage. The "Detected:" list is now in the order Node.js, Python,
-  Go, Java, and the guide says "This repo has N projects" across all ecosystems.
-- Hint for python3 -m venv failing without python3-venv
+  Go, Java, Flutter, and the guide says "This repo has N projects" across all ecosystems.
 
 ## [0.1.1] - 2026-11-14
 

@@ -19,7 +19,7 @@ starting a database, and discovering that the backend lives in a different repos
 really starts, and writes a `SETUP_GUIDE.md` that says what is left for you to decide.
 
 > **Status: early (v0.1).** Node.js projects, plus early Python (Django, FastAPI, Flask, Streamlit),
-> Java (Maven, Gradle, Spring Boot) and Go support. Flutter is detected and reported but not set up yet. See [what works today](#supported-today) and the
+> Java (Maven, Gradle, Spring Boot), Go and Flutter support. See [what works today](#supported-today) and the
 > [roadmap](#roadmap). Feedback from real repositories is the most useful thing you can give.
 
 ## Demo
@@ -123,7 +123,7 @@ These are implemented but have only been exercised in limited ways. Please repor
 
 ### Planned
 
-See the [roadmap](#roadmap): Flutter support, `--ci` and `--json` output, and
+See the [roadmap](#roadmap): `--ci` and `--json` output, and
 reuse of existing `mise.toml`, Dev Container or Makefile setups.
 
 ## Install
@@ -202,13 +202,13 @@ gclone status      # what was done, what failed, what is out of date
 | Node.js with pnpm, yarn, bun | Detected and invoked, not tested on real projects |
 | Java: Maven, Gradle, Spring Boot | Reads the build file (Java version, Spring Boot), uses `mvnw`/`gradlew` or `mvn`/`gradle`, reads `application.properties` / `application.yml` (port, database URL, settings that need values), detects PostgreSQL, MySQL/MariaDB, MongoDB and Redis, runs a dependency download, and `verify` builds and starts Spring Boot. **Detection is unit-tested; the real build and start have not been run end to end yet** (no access to Maven Central in my test environment), and Gradle commands are untested. Please report what happens on your projects |
 | Python: Django, FastAPI, Flask, Streamlit | Finds `requirements.txt`, `pyproject.toml`, `Pipfile` or `setup.py`, picks pip, Poetry, uv or Pipenv from the lock file, and reads the wanted Python version (`.python-version`, `requires-python`, Poetry, Pipfile, `runtime.txt`). For pip it creates a `.venv` inside the project and installs into it, never into your system Python. Finds the web framework and its start command (`manage.py runserver`, `uvicorn`, `flask run`, `streamlit run`) and default port, reads `.env.example`, detects PostgreSQL, MySQL, MongoDB and Redis from dependencies and URLs, and `verify` starts the app and checks it answers. **Tested end to end with a real Flask project** (venv, pip install, start, HTTP 200); Django, FastAPI, Streamlit, Poetry, uv and Pipenv are covered by detection tests only |
+| Flutter | Finds apps whose `pubspec.yaml` depends on Flutter, compares the installed Flutter and Dart with `environment:`, runs `flutter pub get`, creates `.env` from an example file, and notes what an app usually needs by hand: a `.env` asset that is missing, Firebase files (`google-services.json`, `GoogleService-Info.plist`, `firebase_options.dart`) and a backend on `localhost` / `10.0.2.2`. `verify` runs `flutter analyze` (errors only) and never starts the app, because it needs a device you choose. **Tested only against a stand-in `flutter` command, not the real SDK** (no Flutter in my test environment). Please report what happens on your projects |
 | Failure hints | A list of about 20 common failures (npm conflicts, missing build tools, port in use, wrong Java or Go version, registry login, network and proxy). It is a best guess from the output and says so. Unknown errors get no hint |
 | Go modules | `go.mod` read, installed Go compared with the `go` / `toolchain` line, `go mod download`, build check in `verify`. Nothing is started. Tested on gclone itself and one small fixture |
 | Node version check | `.nvmrc`, `.node-version`, `.tool-versions`, `engines`. It warns, it does not switch versions (use nvm, fnm or mise for that) |
 | Repository layout | Root plus one folder level. Workspaces are analyzed at the root only |
 | MongoDB, PostgreSQL, MySQL, Redis, RabbitMQ | Detection tested. Starting them in Docker tested with a stand-in `docker` command, not with a real Docker engine |
 | Compose files | Database services only (postgres, mysql, mariadb, mongo, redis, valkey, rabbitmq). It never starts your app's own containers |
-| Flutter, Rust, PHP, Ruby | Detected and reported only. No setup yet |
 
 Flask and FastAPI detection prefers module-level app objects. If none is found, gclone
 looks for a top-level `def create_app():` (optionally with a return annotation) in the
@@ -216,6 +216,7 @@ same entry files, such as `app.py`, `main.py` and `app/main.py`. Flask uses
 `flask --app module:create_app run`; FastAPI uses `uvicorn module:create_app --factory`.
 This is a static heuristic, without importing project code. Factories with parameters,
 other names or async definitions still need a manually chosen start command.
+| Rust, PHP, Ruby | Detected and reported only. No setup yet |
 
 ## How it works
 
@@ -233,7 +234,7 @@ flowchart LR
 | Component | Package | Job |
 |---|---|---|
 | CLI and flow | `internal/cli` | Argument parsing, `setupRepo`, prompts |
-| Detection | `internal/analyze`, `internal/adapter/node`, `internal/adapter/golang`, `internal/adapter/java`, `internal/adapter/python`, `internal/envfile`, `internal/compose` | Packages, package manager, Node version, env files, compose files |
+| Detection | `internal/analyze`, `internal/adapter/node`, `internal/adapter/golang`, `internal/adapter/java`, `internal/adapter/python`, `internal/adapter/flutter`, `internal/envfile`, `internal/compose` | Packages, package manager, Node version, env files, compose files |
 | Plan and execute | `internal/plan` | Builds the list of steps, runs them |
 | Services | `internal/services`, `internal/docker`, `internal/installer` | Needed databases, Docker states, install and start options |
 | Other repositories | `internal/repos` | Finds, asks about and sets up dependent repositories |
@@ -301,7 +302,7 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
 Priorities, in order. Dates are deliberately absent.
 
 **Next**
-- **Flutter** (the adapter interface is in place, see `docs/ARCHITECTURE.md`)
+- Check the Flutter adapter against the real SDK
 - Deeper Java checks: a real end-to-end run of Maven and Gradle builds
 - `--ci` and `--json` output, integration tests with fixture repositories
 
