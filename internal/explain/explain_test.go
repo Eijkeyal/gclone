@@ -9,6 +9,9 @@ import (
 
 func TestRules(t *testing.T) {
 	cases := []struct{ name, out, id string }{
+		{"flutter sdk", "The current Dart SDK version is 3.2.0.\nBecause demo requires SDK version >=3.3.0 <4.0.0, version solving failed.", "flutter-sdk-constraint"},
+		{"pub solving", "Because a depends on b ^2.0.0 and c depends on b ^1.0.0, version solving failed.", "pub-solving"},
+		{"android licenses", "[!] Android license status unknown.", "android-licenses"},
 		{"eresolve", "npm ERR! code ERESOLVE\nnpm ERR! ERESOLVE could not resolve", "npm-eresolve"},
 		{"etarget", "npm error code ETARGET\nnpm error notarget No matching version", "npm-target"},
 		{"lifecycle", "npm ERR! code ELIFECYCLE", "npm-lifecycle"},

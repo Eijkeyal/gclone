@@ -72,8 +72,8 @@ those paths as experimental.
 
 ## Adapters: one per ecosystem
 
-`internal/adapter/adapter.go` defines the `Adapter` interface. Node.js, Python, Go and Java each
-implement it (`internal/adapter/node`, `python`, `golang`, `java`), and `internal/adapters` lists them.
+`internal/adapter/adapter.go` defines the `Adapter` interface. Node.js, Python, Go, Java and Flutter each
+implement it (`internal/adapter/node`, `python`, `golang`, `java`, `flutter`), and `internal/adapters` lists them.
 The shared stages (`analyze`, `plan`, `verify`, `guide`, `cli`) loop over `adapters.All()` and
 do not know which ecosystems exist.
 
@@ -87,7 +87,7 @@ do not know which ecosystems exist.
 | `Next` | plan | Commands shown under "Next:" |
 | `Guide`, `GuideConfig` | guide | The "Run it" and "What you may need to change" Markdown |
 
-The ecosystems still keep their own list on `Project` (`Pkgs`, `PyProjects`, `GoModules`, `JavaProjects`).
+The ecosystems still keep their own list on `Project` (`Pkgs`, `PyProjects`, `GoModules`, `JavaProjects`, `FlutterProjects`).
 Folding those into one `Units` list is a later step. Some Node-only logic remains outside the
 adapter: docker compose handling, service detection from `package.json` hints and the
 "databases" section of the guide.

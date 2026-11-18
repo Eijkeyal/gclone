@@ -68,6 +68,27 @@ type GoModule struct {
 }
 
 // JavaProject is one Maven or Gradle project, with Spring Boot details when present.
+// FlutterProject is one Flutter app (a pubspec.yaml that depends on the Flutter SDK).
+type FlutterProject struct {
+	Dir              string
+	Rel              string
+	Name             string
+	DartWanted       string // lower bound of environment.sdk, "" when unknown
+	FlutterWanted    string // lower bound of environment.flutter, "" when unknown
+	DartInstalled    string // "" when Flutter is not installed
+	FlutterInstalled string
+	Platforms        []string // android, ios, web, windows, linux, macos
+	Firebase         bool
+	MissingFirebase  []string // Firebase config files that are not in the folder
+	EnvAsset         bool     // pubspec lists .env as an asset
+	EnvExample       string
+	EnvCreated       bool
+	EnvVars          []EnvVar
+	BackendPorts     []string // ports of localhost / 10.0.2.2 addresses found in lib/
+	HasTests         bool
+	Warnings         []string
+}
+
 type JavaProject struct {
 	Dir            string
 	Rel            string
@@ -112,20 +133,21 @@ type PyProject struct {
 
 // Project is the analysed repository.
 type Project struct {
-	URL          string
-	Dir          string
-	Commit       string
-	DockerState  string // "", "ready", "stopped", "missing" or "denied"
-	Executed     bool
-	Pkgs         []*Pkg
-	GoModules    []*GoModule
-	JavaProjects []*JavaProject
-	PyProjects   []*PyProject
-	Composes     []*Compose
-	Needs        []*Need
-	Companions   []*Companion
-	Verify       *Report
-	OtherStacks  []string
-	Warnings     []string
-	Steps        []Step
+	URL             string
+	Dir             string
+	Commit          string
+	DockerState     string // "", "ready", "stopped", "missing" or "denied"
+	Executed        bool
+	Pkgs            []*Pkg
+	GoModules       []*GoModule
+	JavaProjects    []*JavaProject
+	PyProjects      []*PyProject
+	FlutterProjects []*FlutterProject
+	Composes        []*Compose
+	Needs           []*Need
+	Companions      []*Companion
+	Verify          *Report
+	OtherStacks     []string
+	Warnings        []string
+	Steps           []Step
 }
