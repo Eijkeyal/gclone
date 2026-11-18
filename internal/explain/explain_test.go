@@ -2,6 +2,7 @@ package explain
 
 import (
 	"errors"
+	"os/exec"
 	"testing"
 
 	"github.com/rauni5/gclone/internal/proc"
@@ -53,6 +54,9 @@ func TestFromError(t *testing.T) {
 }
 
 func TestRunStreamCapturesOutput(t *testing.T) {
+	if _, err := exec.LookPath("sh"); err != nil {
+		t.Skip("needs a POSIX sh, which is not in PATH")
+	}
 	err := proc.RunStream("", false, "sh", "-c", "echo npm ERR! ERESOLVE >&2; exit 3")
 	h, ok := FromError(err)
 	if !ok || h.ID != "npm-eresolve" {
