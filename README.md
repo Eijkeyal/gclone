@@ -209,6 +209,7 @@ gclone status      # what was done, what failed, what is out of date
 | Repository layout | Root plus one folder level. Workspaces are analyzed at the root only |
 | MongoDB, PostgreSQL, MySQL, Redis, RabbitMQ | Detection tested. Starting them in Docker tested with a stand-in `docker` command, not with a real Docker engine |
 | Compose files | Database services only (postgres, mysql, mariadb, mongo, redis, valkey, rabbitmq). It never starts your app's own containers |
+| Rust, PHP, Ruby | Detected and reported only. No setup yet |
 
 Flask and FastAPI detection prefers module-level app objects. If none is found, gclone
 looks for a top-level `def create_app():` (optionally with a return annotation) in the
@@ -216,7 +217,7 @@ same entry files, such as `app.py`, `main.py` and `app/main.py`. Flask uses
 `flask --app module:create_app run`; FastAPI uses `uvicorn module:create_app --factory`.
 This is a static heuristic, without importing project code. Factories with parameters,
 other names or async definitions still need a manually chosen start command.
-| Rust, PHP, Ruby | Detected and reported only. No setup yet |
+
 
 ## How it works
 
