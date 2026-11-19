@@ -106,6 +106,25 @@ func (Adapter) Install(p *project.Project, o project.Options) []project.Planned 
 				return proc.RunStream(f.Dir, false, "flutter", "pub", "get")
 			},
 		})
+		if len(f.CodeGen) > 0 {
+			// Generated files (*.g.dart, *.freezed.dart) are not in git, so the app does not
+			// compile until this has run. It is part of the plan, so it is shown and confirmed
+			// like the other steps.
+			steps = append(steps, project.Planned{
+				Where: f.Rel,
+				Name:  "Generate code (" + strings.Join(f.CodeGen, ", ") + ")",
+				Cmd:   "dart run build_runner build",
+				Run: func() error {
+					if _, err := exec.LookPath("dart"); err == nil {
+						return proc.RunStream(f.Dir, false, "dart", "run", "build_runner", "build")
+					}
+					if _, err := exec.LookPath("flutter"); err != nil {
+						return fmt.Errorf("dart was not found in PATH, install Flutter from https://docs.flutter.dev/get-started/install")
+					}
+					return proc.RunStream(f.Dir, false, "flutter", "pub", "run", "build_runner", "build")
+				},
+			})
+		}
 	}
 	return steps
 }
@@ -180,6 +199,9 @@ func (Adapter) Guide(p *project.Project) string {
 		}
 		w("flutter doctor              # check the toolchain, once per machine")
 		w("flutter pub get             # dependencies")
+		if len(f.CodeGen) > 0 {
+			w("dart run build_runner build # generated code (%s), needed before the app compiles", strings.Join(f.CodeGen, ", "))
+		}
 		w("flutter devices             # emulators, phones and browsers it can run on")
 		w("flutter run -d <device-id>  # start the app")
 		if contains(f.Platforms, "web") {
@@ -190,6 +212,10 @@ func (Adapter) Guide(p *project.Project) string {
 		}
 		w("```")
 		w("")
+		if len(f.CodeGen) > 0 {
+			w("This app uses code generation (%s). Run `dart run build_runner build` after `flutter pub get` and again after you change annotated classes. Without it `flutter analyze` and the build fail with many errors about missing `.g.dart` or `.freezed.dart` files.", strings.Join(f.CodeGen, ", "))
+			w("")
+		}
 		w("gclone does not start a Flutter app. It runs on a device you choose.")
 		w("")
 	}

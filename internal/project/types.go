@@ -88,6 +88,7 @@ type FlutterProject struct {
 	HasTests         bool
 	DartDefines      []string // names (never values) passed with --dart-define, from launch.json and the README
 	DartDefineFiles  []string // files named by --dart-define-from-file, relative to the app
+	CodeGen          []string // code generation packages in pubspec.yaml (build_runner, freezed, ...)
 	Warnings         []string
 }
 
