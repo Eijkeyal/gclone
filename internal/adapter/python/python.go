@@ -96,6 +96,23 @@ func Older(a, b string) bool {
 	return a2 < b2
 }
 
+// VersionHint suggests how to get the Python version the project asks for, based on the
+// tools already on this machine. It never installs or switches Python itself: it only
+// checks PATH with exec.LookPath and returns a sentence to show the user.
+func VersionHint(version string) string {
+	v := version
+	if v == "" {
+		v = "3"
+	}
+	if _, err := exec.LookPath("uv"); err == nil {
+		return "Install it with: uv python install " + v
+	}
+	if _, err := exec.LookPath("pyenv"); err == nil {
+		return "Install it with: pyenv install " + v
+	}
+	return "Install it from https://www.python.org/downloads/"
+}
+
 var (
 	lowerRe   = regexp.MustCompile(`(?:>=|\^|~=|~|==|>)\s*(\d+\.\d+)`)
 	upperRe   = regexp.MustCompile(`<\s*=?\s*(\d+\.\d+)`)
@@ -345,9 +362,9 @@ func Analyze(root, dir, interpreter string) *project.PyProject {
 		}
 		y.Warnings = append(y.Warnings, "Python was not found in PATH. Install "+want+" from https://www.python.org/downloads/")
 	case lower != "" && Older(interpreter, lower):
-		y.Warnings = append(y.Warnings, "the project asks for Python "+lower+" or newer ("+src+") but Python "+interpreter+" is installed. Install a newer Python from https://www.python.org/downloads/ (or use a version manager such as pyenv or uv)")
+		y.Warnings = append(y.Warnings, "the project asks for Python "+lower+" or newer ("+src+") but Python "+interpreter+" is installed. "+VersionHint(lower))
 	case upper != "" && !Older(interpreter, upper):
-		y.Warnings = append(y.Warnings, "the project supports Python below "+upper+" ("+src+") but Python "+interpreter+" is installed. Some packages may fail to install; consider an older Python (pyenv or uv make this easy)")
+		y.Warnings = append(y.Warnings, "the project supports Python below "+upper+" ("+src+") but Python "+interpreter+" is installed. Some packages may fail to install; consider an older Python. "+VersionHint(upper))
 	}
 	return y
 }
