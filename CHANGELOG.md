@@ -12,6 +12,10 @@ include breaking changes.
 - Flutter: notices `build_runner`, `freezed`, `json_serializable` and `riverpod_generator` in
   `pubspec.yaml`, adds `dart run build_runner build` to the plan after `flutter pub get`, and
   mentions it in the guide.
+- Integration tests (`integration/`): build the real binary and run it on every sample
+  project (dry run, detected stack, planned steps, nothing written), one real run of the Go
+  sample with `--resume`, `--ci` exiting 1 on a failed step, and usage errors. Skipped with
+  `go test -short`.
 - `--ci`: for scripts and CI. It never asks or reads the terminal (every question is answered
   no), implies `--yes`, and exits 1 when a setup step or the verification fails.
 - `--json`: prints one JSON result on standard output (`ok`, detected stacks, steps,

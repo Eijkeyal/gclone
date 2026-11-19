@@ -334,7 +334,6 @@ Priorities, in order. Dates are deliberately absent.
 **Next**
 - Check the Flutter adapter against the real SDK
 - Deeper Java checks: a real end-to-end run of Maven and Gradle builds
-- Integration tests with fixture repositories, run in CI
 
 **Then**
 - Reuse an existing `mise.toml`, `.tool-versions`, Dev Container or Makefile `setup` target

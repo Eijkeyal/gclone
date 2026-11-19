@@ -55,6 +55,7 @@ internal/
   proc/                  run programs, process groups (unix and windows files)
   fsx/, ui/, buildinfo/  small helpers: files, prompts, version
 testdata/                small sample repositories used by tests
+integration/             runs the built gclone binary on those samples
 docs/                    architecture, good first issues, competitor analysis, growth plan
 Makefile                 make build | test | check | release
 ```
@@ -96,6 +97,15 @@ make check            # gofmt, vet and tests, same as CI
 ```
 
 Tests that need Node (`TestVerify*`) start real short-lived servers on free ports.
+
+**Integration tests.** `integration/` builds the real binary once and runs it on the folders
+in `testdata/`: a dry run of each (detected stack, planned steps, nothing written into the
+fixture), one real run of the Go sample, `--ci` exiting 1 on a failed step, and the usage
+errors. They need only Go and git, no network. `go test -short ./...` skips them.
+
+**Adding a language?** Add a small sample under `testdata/<name>/` and a row in
+`TestFixturesDryRun` (`integration/integration_test.go`), with the text the detected line and the
+plan must contain. That row is how we know the adapter is wired in and works on a real folder.
 
 **Faking Docker.** There is no Docker engine in most test environments. To test a Docker
 code path, use the helper in `internal/docker/fake_docker_test.go`:
