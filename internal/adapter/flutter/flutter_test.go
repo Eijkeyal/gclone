@@ -96,8 +96,7 @@ func TestDartDefines(t *testing.T) {
   }]
 }`)
 	write(t, d, "config/dev.json", `{"MAPS_KEY": "secret-value", "API_URL": "x"}`)
-	write(t, d, "README.md", "flutter run --dart-define=STRIPE_KEY=pk_test
-")
+	write(t, d, "README.md", "flutter run --dart-define=STRIPE_KEY=pk_test")
 	names, files := DartDefines(d)
 	if strings.Join(names, ",") != "API_URL,MAPS_KEY,SENTRY_DSN,STRIPE_KEY" {
 		t.Errorf("names %v", names)
@@ -115,13 +114,11 @@ func TestDartDefines(t *testing.T) {
 func TestDartDefinesInGuide(t *testing.T) {
 	d := t.TempDir()
 	write(t, d, "pubspec.yaml", app)
-	write(t, d, "README.md", "run with --dart-define=API_URL=https://example.test
-")
+	write(t, d, "README.md", "run with --dart-define=API_URL=https://example.test")
 	p := &project.Project{Dir: d}
 	a := Adapter{}
 	a.Analyze(p, d)
-	cfg := strings.Join(a.GuideConfig(p), "
-")
+	cfg := strings.Join(a.GuideConfig(p), "")
 	if !strings.Contains(cfg, "`API_URL`") || strings.Contains(cfg, "example.test") {
 		t.Errorf("config section %q", cfg)
 	}
