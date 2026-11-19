@@ -194,6 +194,8 @@ func DartDefines(dir string) (names, files []string) {
 	sort.Strings(names)
 	sort.Strings(files)
 	return names, files
+}
+
 // codeGenPackages need `dart run build_runner build` before the app compiles.
 var codeGenPackages = []string{"build_runner", "freezed", "json_serializable", "riverpod_generator"}
 

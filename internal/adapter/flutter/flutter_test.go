@@ -121,6 +121,8 @@ func TestDartDefinesInGuide(t *testing.T) {
 	cfg := strings.Join(a.GuideConfig(p), "")
 	if !strings.Contains(cfg, "`API_URL`") || strings.Contains(cfg, "example.test") {
 		t.Errorf("config section %q", cfg)
+	}
+}
 func TestCodeGen(t *testing.T) {
 	if got := CodeGen(app); len(got) != 0 {
 		t.Errorf("plain app: %v", got)
