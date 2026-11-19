@@ -131,6 +131,30 @@ behaviour should still be checked by hand before you claim it works.
 Commit messages: a short imperative first line (`Add RabbitMQ detection`), then details if
 needed.
 
+## Using AI tools
+
+AI assistants are welcome here; the maintainer uses one too. What matters is that a person
+stands behind the change.
+
+- **You are responsible for every line you submit.** Read it, run it, and be able to explain
+  why it is the way it is when a reviewer asks.
+- **Say so when an AI wrote a substantial part.** One line in the pull request is enough ("Drafted
+  with Claude, I ran X and Y"). It is not a penalty. It tells the reviewer where to look
+  harder.
+- **Run it for real.** Say what you ran and what it printed. "Tests pass" is not enough for
+  a change to Docker, package managers or a new language: say whether you tried it on a real
+  project or only with a fake (ground rule 6).
+- **No invented facts.** Do not claim a command, flag, version or behaviour that you did not
+  check. Generated text in the README, comments or a pull request description gets the same
+  review as code.
+- **Keep it small and about one thing.** Large generated changes, drive-by rewrites and
+  unrelated formatting are hard to review and will be asked to be split.
+
+A pull request may be closed, with a short reason, when it clearly was not read or run by its
+author, does not follow the ground rules above, or has no explanation. You are welcome to
+reopen it after fixing that. For issues marked `good first issue`, please comment first so two
+people do not work on the same one.
+
 ## Adding a feature
 
 1. Find where it belongs using the structure above.
