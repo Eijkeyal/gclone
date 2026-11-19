@@ -9,6 +9,9 @@ include breaking changes.
 
 ### Added
 
+- Flutter: notices `build_runner`, `freezed`, `json_serializable` and `riverpod_generator` in
+  `pubspec.yaml`, adds `dart run build_runner build` to the plan after `flutter pub get`, and
+  mentions it in the guide.
 - Flutter adapter: finds Flutter apps, checks the installed Flutter and Dart against the
   app, runs `flutter pub get`, creates `.env` from an example, and notes missing Firebase
   files and a backend on `localhost`. `verify` runs `flutter analyze` (errors only) and does

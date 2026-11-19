@@ -144,6 +144,21 @@ var envAssetRe = regexp.MustCompile(`(?m)^\s*-\s*["']?(?:[\w./-]*/)?\.env["']?\s
 var firebaseDepRe = regexp.MustCompile(`(?m)^\s+firebase_core:`)
 var backendRe = regexp.MustCompile(`(?:localhost|127\.0\.0\.1|10\.0\.2\.2):(\d{2,5})`)
 
+// codeGenPackages need `dart run build_runner build` before the app compiles.
+var codeGenPackages = []string{"build_runner", "freezed", "json_serializable", "riverpod_generator"}
+
+// CodeGen lists the code generation packages a pubspec names under dependencies or
+// dev_dependencies, in a fixed order.
+func CodeGen(pubspec string) []string {
+	var out []string
+	for _, name := range codeGenPackages {
+		if regexp.MustCompile(`(?m)^[ 	]+` + name + `:`).MatchString(pubspec) {
+			out = append(out, name)
+		}
+	}
+	return out
+}
+
 var platformDirs = []string{"android", "ios", "web", "windows", "linux", "macos"}
 var envExamples = []string{".env.example", ".env.sample", ".env.template", "example.env"}
 
@@ -178,6 +193,7 @@ func Analyze(root, dir, flutterVer, dartVer string) *project.FlutterProject {
 		f.Firebase = true
 		f.MissingFirebase = missingFirebase(dir, f.Platforms)
 	}
+	f.CodeGen = CodeGen(pub)
 	f.BackendPorts = backendPorts(dir)
 	f.HasTests = hasDartTests(dir)
 

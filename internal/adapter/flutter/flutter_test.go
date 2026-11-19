@@ -86,6 +86,43 @@ func TestAnalyze(t *testing.T) {
 	}
 }
 
+func TestCodeGen(t *testing.T) {
+	if got := CodeGen(app); len(got) != 0 {
+		t.Errorf("plain app: %v", got)
+	}
+	pub := app + `freezed_annotation: ^2.4.0
+  riverpod_generator: ^2.4.0
+dev_dependencies:
+  build_runner: ^2.4.0
+  freezed: ^2.5.0
+  json_serializable: ^6.8.0\n
+`
+	got := strings.Join(CodeGen(pub), ",")
+	if got != "build_runner,freezed,json_serializable,riverpod_generator" {
+		t.Errorf("got %q", got)
+	}
+}
+
+func TestCodeGenStep(t *testing.T) {
+	d := t.TempDir()
+	write(t, d, "pubspec.yaml", app+`dev_dependencies:
+  build_runner: ^2.4.0
+`)
+	p := &project.Project{Dir: d}
+	a := Adapter{}
+	a.Analyze(p, d)
+	steps := a.Install(p, project.Options{})
+	if len(steps) != 2 || steps[1].Cmd != "dart run build_runner build" {
+		t.Fatalf("steps %+v", steps)
+	}
+	if len(a.Install(p, project.Options{NoInstall: true})) != 0 {
+		t.Error("NoInstall ignored")
+	}
+	if !strings.Contains(a.Guide(p), "dart run build_runner build") {
+		t.Error("guide does not mention the build step")
+	}
+}
+
 func TestMissingFlutterWarns(t *testing.T) {
 	d := t.TempDir()
 	write(t, d, "pubspec.yaml", app)
