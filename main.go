@@ -6,10 +6,11 @@ import (
 	"github.com/rauni5/gclone/internal/cli"
 )
 
-// version is set at build time with -ldflags "-X main.version=vX.Y.Z".
-var version = "0.1.1-dev"
+// version is set at build time with -ldflags "-X main.version=vX.Y.Z". When it is left at its
+// development default, a binary installed with `go install ...@vX.Y.Z` shows that tag instead.
+var version = "0.2.1-dev"
 
 func main() {
-	buildinfo.Version = version
+	buildinfo.Version = buildinfo.Pick(version, buildinfo.Module())
 	cli.Main()
 }

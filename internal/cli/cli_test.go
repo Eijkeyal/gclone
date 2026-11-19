@@ -6,8 +6,10 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/rauni5/gclone/internal/doctor"
 	"github.com/rauni5/gclone/internal/project"
 	"github.com/rauni5/gclone/internal/state"
 )
@@ -106,4 +108,55 @@ func TestStatusJSON(t *testing.T) {
 		t.Error("failed step must give ok false")
 	}
 	_ = os.Remove(filepath.Join(dir, state.Dir))
+}
+
+func fakeEnv(haveGit bool) doctor.Env {
+	return doctor.Env{
+		Have:        func(b string) bool { return b != "git" || haveGit },
+		Version:     func(string, ...string) string { return "1.0" },
+		DockerState: func() string { return "ready" },
+		PortFree:    func(int) bool { return true },
+		Reachable:   func(int) bool { return false },
+		FreeBytes:   func(string) (uint64, error) { return 50 << 30, nil },
+		VenvWorks:   func() bool { return true },
+	}
+}
+
+func TestDoctorEmptyFolder(t *testing.T) {
+	var b bytes.Buffer
+	ok, err := runDoctor(&b, t.TempDir(), false, fakeEnv(true))
+	if err != nil || !ok {
+		t.Fatalf("ok=%v err=%v\n%s", ok, err, b.String())
+	}
+	if !strings.Contains(b.String(), "no supported project") || !strings.Contains(b.String(), "READY WITH WARNINGS") {
+		t.Errorf("%s", b.String())
+	}
+}
+
+func TestDoctorJSONAndFailure(t *testing.T) {
+	var b bytes.Buffer
+	ok, err := runDoctor(&b, t.TempDir(), true, fakeEnv(false))
+	if err != nil || ok {
+		t.Fatalf("a missing git must give ok=false: ok=%v err=%v", ok, err)
+	}
+	var r DoctorResult
+	if err := json.Unmarshal(b.Bytes(), &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.OK || r.Verdict != "NOT READY" || len(r.Checks) == 0 {
+		t.Errorf("%+v", r)
+	}
+}
+
+func TestDoctorNotADirectory(t *testing.T) {
+	if _, err := runDoctor(&bytes.Buffer{}, filepath.Join(t.TempDir(), "nope"), false, fakeEnv(true)); err == nil {
+		t.Error("a missing folder must be an error")
+	}
+}
+
+func TestParseDoctor(t *testing.T) {
+	o, _ := parseArgs([]string{"doctor", "app", "--json"})
+	if !o.DoctorCmd || o.Dir != "app" || !o.JSON {
+		t.Errorf("%+v", o)
+	}
 }

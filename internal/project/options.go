@@ -7,5 +7,6 @@ type Options struct {
 	Timeout                                                            int
 	Setup, StatusCmd, Resume                                           bool
 	CI, JSON                                                           bool
+	DoctorCmd                                                          bool
 	Url, Dir                                                           string
 }

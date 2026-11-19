@@ -49,6 +49,7 @@ internal/
   plan/                  build, show and execute the setup steps
   repos/                 other repositories a project needs (README, local deps, submodules)
   verify/                build, start, port check, HTTP probe, report
+  doctor/                `gclone doctor`: tools, Docker, ports and disk, nothing changed
   guide/                 write SETUP_GUIDE.md
   explain/               plain-language hints for failed commands (a list of patterns)
   state/                 .gclone/state.json: write, read, `gclone status`, `--resume`
