@@ -9,6 +9,8 @@ include breaking changes.
 
 ### Added
 
+- README: examples of `--json` with `jq` for the failed steps, the last verification
+  verdict, the services a project needs, the error message, and `ok` as a CI gate.
 - Flutter: notices `build_runner`, `freezed`, `json_serializable` and `riverpod_generator` in
   `pubspec.yaml`, adds `dart run build_runner build` to the plan after `flutter pub get`, and
   mentions it in the guide.

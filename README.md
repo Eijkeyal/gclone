@@ -296,6 +296,35 @@ added; `schema` changes only when one is removed or changes meaning. A GitHub Ac
 be as short as `go install github.com/rauni5/gclone@latest` followed by `gclone setup . --ci
 --verify` (the workflow itself has not been run on GitHub yet).
 
+### Examples
+
+Each line below was run against the sample projects in `testdata/`. `2>/dev/null` hides the
+human-readable progress messages, so only the JSON reaches `jq`.
+
+```bash
+# the setup steps that failed, with the note that says why
+gclone setup . --ci --json 2>/dev/null | jq -r '.steps[] | select(.status=="failed") | "\(.name): \(.note)"'
+
+# the verdict of the last verification, with a fallback when nothing was verified yet
+gclone status --json | jq -r '.state.verify.verdict // "not verified yet"'
+
+# the services the project needs, without installing or starting any of them
+gclone setup . --dry-run --json 2>/dev/null | jq -r '.services[] | "\(.kind) on port \(.port)"'
+
+# why a clone or a setup stopped, when there are no steps to look at
+gclone someone/example app --json 2>/dev/null | jq -r '.error // "no error"'
+```
+
+For a pass/fail gate, use `ok` with `jq -e`, which exits 1 when the value is `false` or
+`null`:
+
+```bash
+gclone setup . --ci --json 2>/dev/null | jq -e '.ok' >/dev/null
+```
+
+`status` already exits 1 when a step or the last verification failed, so in a job that runs
+both, the exit code of `gclone` is usually enough.
+
 ## Safety and security
 
 **gclone runs code from the repository you point it at.** Installing dependencies runs
