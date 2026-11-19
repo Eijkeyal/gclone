@@ -20,6 +20,8 @@ include breaking changes.
 
 ### Added
 
+- README: examples of `--json` with `jq` for the failed steps, the last verification
+  verdict, the services a project needs, the error message, and `ok` as a CI gate.
 - Integration dry-run coverage for the Flask and FastAPI application-factory samples,
   checking detected frameworks, planned dependency installation, and untouched fixtures.
 - Flutter: notices `build_runner`, `freezed`, `json_serializable` and `riverpod_generator` in
