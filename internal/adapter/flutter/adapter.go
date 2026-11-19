@@ -243,7 +243,7 @@ func (Adapter) GuideConfig(p *project.Project) []string {
 				review = append(review, v)
 			}
 		}
-		if len(blocking) == 0 && len(review) == 0 && len(f.MissingFirebase) == 0 && len(f.BackendPorts) == 0 && !f.EnvCreated {
+		if len(blocking) == 0 && len(review) == 0 && len(f.MissingFirebase) == 0 && len(f.BackendPorts) == 0 && len(f.DartDefines) == 0 && len(f.DartDefineFiles) == 0 && !f.EnvCreated {
 			continue
 		}
 		var b strings.Builder
@@ -278,6 +278,18 @@ func (Adapter) GuideConfig(p *project.Project) []string {
 			}
 			w("")
 			w("These are usually kept out of git. Create them with `flutterfire configure`, or download them from your Firebase console. The app may not build or start without them.")
+			w("")
+		}
+		if len(f.DartDefines) > 0 || len(f.DartDefineFiles) > 0 {
+			w("**Values passed with `--dart-define`:** the app reads these at build time. Pass each one with `--dart-define=NAME=value` (gclone lists names only, never values).")
+			w("")
+			for _, n := range f.DartDefines {
+				w("- `%s`", n)
+			}
+			if len(f.DartDefineFiles) > 0 {
+				w("")
+				w("Names are also read from a file with `--dart-define-from-file`: %s. Create it yourself if it is not in the repository.", "`"+strings.Join(f.DartDefineFiles, "`, `")+"`")
+			}
 			w("")
 		}
 		if len(f.BackendPorts) > 0 {

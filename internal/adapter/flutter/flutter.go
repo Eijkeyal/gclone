@@ -144,6 +144,58 @@ var envAssetRe = regexp.MustCompile(`(?m)^\s*-\s*["']?(?:[\w./-]*/)?\.env["']?\s
 var firebaseDepRe = regexp.MustCompile(`(?m)^\s+firebase_core:`)
 var backendRe = regexp.MustCompile(`(?:localhost|127\.0\.0\.1|10\.0\.2\.2):(\d{2,5})`)
 
+var (
+	// --dart-define=NAME=value, or "--dart-define", "NAME=value" as two launch.json arguments.
+	dartDefineRe = regexp.MustCompile(`--dart-define(?:=|["']?\s*,\s*["'])([A-Za-z_][A-Za-z0-9_]*)=`)
+	// --dart-define-from-file=path, or "--dart-define-from-file", "path".
+	dartDefineFileRe = regexp.MustCompile(`--dart-define-from-file(?:=|["']?\s*,\s*["'])([^"'\s,]+)`)
+)
+
+// DartDefines reads .vscode/launch.json and README.md of an app and returns the names given
+// with --dart-define and the files given with --dart-define-from-file. Only names are kept:
+// the values are never stored, and a defines file is read for its keys only.
+func DartDefines(dir string) (names, files []string) {
+	seen, seenFile := map[string]bool{}, map[string]bool{}
+	for _, rel := range []string{filepath.Join(".vscode", "launch.json"), "README.md"} {
+		b, err := os.ReadFile(filepath.Join(dir, rel))
+		if err != nil || len(b) > 1<<20 {
+			continue
+		}
+		for _, m := range dartDefineRe.FindAllSubmatch(b, -1) {
+			seen[string(m[1])] = true
+		}
+		for _, m := range dartDefineFileRe.FindAllSubmatch(b, -1) {
+			f := filepath.ToSlash(strings.TrimPrefix(filepath.ToSlash(string(m[1])), "./"))
+			if f == "" || strings.HasPrefix(f, "/") || strings.Contains(f, "..") || strings.Contains(f, "$") {
+				continue
+			}
+			if !seenFile[f] {
+				seenFile[f] = true
+				files = append(files, f)
+			}
+		}
+	}
+	for _, f := range files {
+		raw, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(f)))
+		if err != nil || len(raw) > 1<<20 {
+			continue
+		}
+		var kv map[string]interface{}
+		if json.Unmarshal(raw, &kv) != nil {
+			continue
+		}
+		for k := range kv {
+			seen[k] = true
+		}
+	}
+	for n := range seen {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	sort.Strings(files)
+	return names, files
+}
+
 // codeGenPackages need `dart run build_runner build` before the app compiles.
 var codeGenPackages = []string{"build_runner", "freezed", "json_serializable", "riverpod_generator"}
 
@@ -193,6 +245,7 @@ func Analyze(root, dir, flutterVer, dartVer string) *project.FlutterProject {
 		f.Firebase = true
 		f.MissingFirebase = missingFirebase(dir, f.Platforms)
 	}
+	f.DartDefines, f.DartDefineFiles = DartDefines(dir)
 	f.CodeGen = CodeGen(pub)
 	f.BackendPorts = backendPorts(dir)
 	f.HasTests = hasDartTests(dir)
