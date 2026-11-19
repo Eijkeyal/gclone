@@ -9,6 +9,8 @@ include breaking changes.
 
 ### Added
 
+- Integration dry-run coverage for the Flask and FastAPI application-factory samples,
+  checking detected frameworks, planned dependency installation, and untouched fixtures.
 - Flutter: notices `build_runner`, `freezed`, `json_serializable` and `riverpod_generator` in
   `pubspec.yaml`, adds `dart run build_runner build` to the plan after `flutter pub get`, and
   mentions it in the guide.
