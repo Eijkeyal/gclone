@@ -7,11 +7,27 @@ include breaking changes.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-19
+
+### Fixed
+
+- `gclone --version` printed a stale development version (`0.1.1-dev`) when installed with
+  `go install github.com/rauni5/gclone@latest`. It now shows the installed tag. A plain
+  `go build` in a checkout shows `0.2.1-dev`, and release builds still use the version given
+  to `scripts/build-release.sh`.
+
+## [0.2.0] - 2026-11-19
+
 ### Added
 
 - Flutter: notices `build_runner`, `freezed`, `json_serializable` and `riverpod_generator` in
   `pubspec.yaml`, adds `dart run build_runner build` to the plan after `flutter pub get`, and
   mentions it in the guide.
+- `gclone doctor [directory]`: checks, without changing anything, that this machine can run a
+  project. It reports the tools each stack needs (with versions), warnings from the project
+  files, Docker and the databases the project uses, whether the apps' ports are free and free
+  disk space, and ends with `READY`, `READY WITH WARNINGS` or `NOT READY` (exit code 1).
+  `--json` prints the result as JSON.
 - Integration tests (`integration/`): build the real binary and run it on every sample
   project (dry run, detected stack, planned steps, nothing written), one real run of the Go
   sample with `--resume`, `--ci` exiting 1 on a failed step, and usage errors. Skipped with
@@ -44,9 +60,10 @@ include breaking changes.
 - `gclone verify` says "no supported project found" instead of listing three ecosystems.
 - The message shown when `npm ci` falls back to `npm install` now explains why and what to
   do next (#11, thanks @dbdefault).
-- Node.js, Python, Go, Java and Flutter now implement one shared `Adapter` interface, so adding an ecosystem
-  no longer means editing every stage. The "Detected:" list is now in the order Node.js, Python,
-  Go, Java, Flutter, and the guide says "This repo has N projects" across all ecosystems.
+- Node.js, Python, Go, Java and Flutter now implement one shared `Adapter` interface, so
+  adding an ecosystem no longer means editing every stage. The "Detected:" list is now in the
+  order Node.js, Python, Go, Java, Flutter, and the guide says "This repo has N projects"
+  across all ecosystems.
 
 ## [0.1.1] - 2026-11-14
 
@@ -96,6 +113,8 @@ include breaking changes.
   (exceptions: `PORT` as the expected port, and the login of a database container gclone
   creates).
 
-[Unreleased]: https://github.com/rauni5/gclone/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/rauni5/gclone/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/rauni5/gclone/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/rauni5/gclone/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/rauni5/gclone/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/rauni5/gclone/releases/tag/v0.1.0

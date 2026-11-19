@@ -11,6 +11,7 @@ import (
 	"github.com/rauni5/gclone/internal/analyze"
 	"github.com/rauni5/gclone/internal/buildinfo"
 	"github.com/rauni5/gclone/internal/docker"
+	"github.com/rauni5/gclone/internal/doctor"
 	"github.com/rauni5/gclone/internal/explain"
 	"github.com/rauni5/gclone/internal/fsx"
 	"github.com/rauni5/gclone/internal/guide"
@@ -31,6 +32,7 @@ Usage:
   gclone setup [directory] [options]     set up a repo that is already cloned
   gclone verify [directory] [options]    build it, start it, check it answers; exit 1 if not ready
   gclone status [directory]              show what gclone did here and what is out of date
+  gclone doctor [directory]              check, without changing anything, that this machine can run it
 
 Options:
   -n, --dry-run         Clone and analyze, show the plan, run nothing else
@@ -115,10 +117,11 @@ func parseArgs(args []string) (project.Options, error) {
 			pos = append(pos, a)
 		}
 	}
-	if len(pos) > 0 && (pos[0] == "setup" || pos[0] == "verify" || pos[0] == "status") {
+	if len(pos) > 0 && (pos[0] == "setup" || pos[0] == "verify" || pos[0] == "status" || pos[0] == "doctor") {
 		o.Setup = pos[0] == "setup"
 		o.VerifyCmd = pos[0] == "verify"
 		o.StatusCmd = pos[0] == "status"
+		o.DoctorCmd = pos[0] == "doctor"
 		o.Dir = "."
 		if len(pos) == 2 {
 			o.Dir = pos[1]
@@ -158,6 +161,17 @@ func Main() {
 		}
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "gclone:", err)
+			os.Exit(1)
+		}
+		return
+	}
+	if o.DoctorCmd {
+		ok, err := runDoctor(os.Stdout, o.Dir, o.JSON, doctor.DefaultEnv())
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "gclone:", err)
+			os.Exit(1)
+		}
+		if !ok {
 			os.Exit(1)
 		}
 		return

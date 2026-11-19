@@ -222,6 +222,46 @@ func TestCIFailsOnAFailedStep(t *testing.T) {
 	}
 }
 
+// doctor must answer and must not write anything into the project it looks at.
+func TestDoctorChangesNothing(t *testing.T) {
+	dir := fixture("go-cli")
+	r := do(t, "doctor", dir, "--json")
+	var d struct {
+		OK      bool   `json:"ok"`
+		Verdict string `json:"verdict"`
+		Checks  []struct {
+			Group, Name, Status string
+		} `json:"checks"`
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &d); err != nil {
+		t.Fatalf("not JSON: %v\n%s\n%s", err, r.stdout, r.stderr)
+	}
+	if d.Verdict == "" || len(d.Checks) == 0 {
+		t.Errorf("%+v", d)
+	}
+	// Go is installed wherever this test runs, so the Go sample must pass its tool check.
+	found := false
+	for _, c := range d.Checks {
+		if c.Group == "Tools" && c.Name == "go" && c.Status == "pass" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("no passing go check: %+v", d.Checks)
+	}
+	if (r.code == 0) != d.OK {
+		t.Errorf("exit code %d does not match ok=%v", r.code, d.OK)
+	}
+	for _, leftover := range []string{"SETUP_GUIDE.md", ".gclone"} {
+		if _, err := os.Stat(filepath.Join(dir, leftover)); err == nil {
+			t.Errorf("doctor created %s", leftover)
+		}
+	}
+	if r := do(t, "doctor", filepath.Join(t.TempDir(), "nope")); r.code != 1 {
+		t.Errorf("a missing folder: exit %d, want 1", r.code)
+	}
+}
+
 func TestStatusWithoutState(t *testing.T) {
 	r := do(t, "status", t.TempDir())
 	if r.code != 1 || !strings.Contains(r.stderr, "no gclone state") {

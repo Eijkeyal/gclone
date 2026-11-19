@@ -111,12 +111,14 @@ func BuildResult(dir string, p *project.Project, err error) Result {
 	return r
 }
 
-// WriteResult prints the document as indented JSON.
-func WriteResult(w io.Writer, r Result) error {
+func writeJSON(w io.Writer, v interface{}) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
-	return enc.Encode(r)
+	return enc.Encode(v)
 }
+
+// WriteResult prints the document as indented JSON.
+func WriteResult(w io.Writer, r Result) error { return writeJSON(w, r) }
 
 // statusJSON prints the recorded state for `gclone status --json`. The second result is
 // false when a step or the last verification failed.

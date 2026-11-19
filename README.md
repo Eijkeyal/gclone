@@ -261,7 +261,28 @@ gclone has **no configuration file**. Behaviour is controlled with flags.
 | `-v`, `--version` / `-h`, `--help` | Version / help |
 
 Commands: `gclone <repo> [directory]`, `gclone setup [directory]`, `gclone verify [directory]`,
-`gclone status [directory]` (exit code 1 when a step or the last verification failed).
+`gclone status [directory]` (exit code 1 when a step or the last verification failed),
+`gclone doctor [directory]` (see below).
+
+## Check a machine first: `gclone doctor`
+
+`gclone doctor [directory]` answers one question and changes nothing: can this machine run
+this project? It reads the folder the way `setup` does and then checks:
+
+- **Tools** the stacks need (git, node and the package manager, go, java and maven or gradle,
+  python and its package manager or `venv` support, flutter), with their versions.
+- **Project warnings** gclone already found, such as a Node, Go, Java or Python version that is
+  older than the project asks for, or two apps that want the same port.
+- **Services**: whether Docker is installed and running, and whether each database the
+  project needs is already answering.
+- **Ports** the apps want, and whether they are free.
+- **Disk**: free space (a warning under 2 GB, a failure under 500 MB).
+
+Each line is `[ok]`, `[warn]` or `[FAIL]`. The verdict is `READY`, `READY WITH WARNINGS` or
+`NOT READY`, and the exit code is 1 only for `NOT READY`. A missing database or a stopped
+Docker is a warning, because `gclone setup` can offer to start it. `--json` prints the same
+result as JSON. It runs only version commands of tools (`node --version`, `docker info`), never
+code from the project.
 
 ## Use in scripts and CI
 
@@ -337,7 +358,7 @@ Priorities, in order. Dates are deliberately absent.
 
 **Then**
 - Reuse an existing `mise.toml`, `.tool-versions`, Dev Container or Makefile `setup` target
-- `gclone doctor`, port conflict detection, `gclone export devcontainer`
+- `gclone export devcontainer`
 
 **Later, if there is demand**
 - An optional LLM planner that only *suggests* steps, always validated and approved by you
