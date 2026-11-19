@@ -108,6 +108,8 @@ func TestFixturesDryRun(t *testing.T) {
 		{"go-cli", "Go ", "Download Go modules"},
 		{"spring-maven", "Spring Boot", "Download Java dependencies"},
 		{"python-flask", "Flask", "Install dependencies (pip)"},
+		{"python-flask-factory", "Flask", "Install dependencies (pip)"},
+		{"python-fastapi-factory", "FastAPI", "Install dependencies (pip)"},
 		{"python-django", "Django", "Create virtual environment"},
 		{"flutter-app", "Flutter", "flutter pub get"},
 	}
