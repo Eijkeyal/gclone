@@ -12,6 +12,11 @@ include breaking changes.
 - Flutter: notices `build_runner`, `freezed`, `json_serializable` and `riverpod_generator` in
   `pubspec.yaml`, adds `dart run build_runner build` to the plan after `flutter pub get`, and
   mentions it in the guide.
+- `--ci`: for scripts and CI. It never asks or reads the terminal (every question is answered
+  no), implies `--yes`, and exits 1 when a setup step or the verification fails.
+- `--json`: prints one JSON result on standard output (`ok`, detected stacks, steps,
+  services, verification checks) and sends every other message to standard error.
+  `gclone status --json` prints the recorded state. No variable values are included.
 - Flutter adapter: finds Flutter apps, checks the installed Flutter and Dart against the
   app, runs `flutter pub get`, creates `.env` from an example, and notes missing Firebase
   files and a backend on `localhost`. `verify` runs `flutter analyze` (errors only) and does
@@ -32,6 +37,7 @@ include breaking changes.
 
 ### Changed
 
+- `gclone verify` says "no supported project found" instead of listing three ecosystems.
 - The message shown when `npm ci` falls back to `npm install` now explains why and what to
   do next (#11, thanks @dbdefault).
 - Node.js, Python, Go, Java and Flutter now implement one shared `Adapter` interface, so adding an ecosystem

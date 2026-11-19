@@ -440,18 +440,19 @@ func updateGuideVerification(dir string, r *project.Report) {
 }
 
 // verifyCommand implements `gclone verify [directory]`.
-func VerifyCommand(abs string, o project.Options) error {
+func VerifyCommand(abs string, o project.Options) (*project.Project, error) {
 	p := analyze.AnalyzeProject(abs)
 	if !p.HasUnits() {
-		return fmt.Errorf("no Node.js, Go or Java project found in %s, nothing to verify", abs)
+		return p, fmt.Errorf("no supported project found in %s, nothing to verify", abs)
 	}
 	rep := RunVerify(p, o)
+	p.Verify = rep
 	updateGuideVerification(abs, rep)
 	if err := state.RecordVerify(abs, p, rep); err != nil {
 		fmt.Printf("[warn] could not update %s: %v\n", state.Path(abs), err)
 	}
 	if rep.Verdict == "NOT READY" || rep.Verdict == "INTERRUPTED" {
-		return errNotReady
+		return p, errNotReady
 	}
-	return nil
+	return p, nil
 }

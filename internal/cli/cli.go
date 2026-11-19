@@ -46,6 +46,11 @@ Options:
       --verify          Run the verification after setup without asking
       --no-build        Skip the build step when verifying
       --resume          With setup: skip install steps that already succeeded at this commit
+      --ci              For scripts and CI: never ask or read the terminal (questions are
+                        answered no), implies --yes, and exit 1 when a step or the
+                        verification fails
+      --json            Print one JSON result on standard output; messages go to standard
+                        error. With status: print the recorded state as JSON
       --timeout=SECONDS How long verify waits for the app to listen (default 60)
   -v, --version         Print the version
   -h, --help            Print this help
@@ -84,6 +89,11 @@ func parseArgs(args []string) (project.Options, error) {
 			o.NoBuild = true
 		case "--resume":
 			o.Resume = true
+		case "--ci":
+			o.CI = true
+			o.Yes = true
+		case "--json":
+			o.JSON = true
 		case "-v", "--version":
 			fmt.Println("gclone", buildinfo.Version)
 			os.Exit(0)
@@ -134,22 +144,54 @@ func Main() {
 		fmt.Fprint(os.Stderr, "\n"+usage)
 		os.Exit(2)
 	}
-	if err := run(o); err != nil {
+	if o.CI {
+		ui.NonInteractive = true
+		proc.NoStdin = true
+	}
+	if o.StatusCmd && o.JSON {
+		abs, err := filepath.Abs(o.Dir)
+		if err == nil {
+			var ok bool
+			if ok, err = statusJSON(os.Stdout, abs); err == nil && !ok {
+				os.Exit(1)
+			}
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "gclone:", err)
+			os.Exit(1)
+		}
+		return
+	}
+	// With --json the result is the only thing on standard output. Everything else the
+	// program prints goes to standard error.
+	result := os.Stdout
+	if o.JSON {
+		os.Stdout = os.Stderr
+	}
+	dir, p, err := run(o)
+	if o.JSON {
+		if werr := WriteResult(result, BuildResult(dir, p, err)); werr != nil {
+			fmt.Fprintln(os.Stderr, "gclone: could not write the result:", werr)
+		}
+	}
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "gclone:", err)
 		os.Exit(1)
 	}
 }
 
-func run(o project.Options) error {
+// run does what the command line asked. It returns the folder it worked in and the project
+// it analyzed, for --json, which are empty when it stopped early.
+func run(o project.Options) (string, *project.Project, error) {
 	if o.StatusCmd {
 		abs, err := filepath.Abs(o.Dir)
 		if err != nil {
-			return err
+			return "", nil, err
 		}
-		return state.Print(os.Stdout, abs)
+		return abs, nil, state.Print(os.Stdout, abs)
 	}
 	if _, err := exec.LookPath("git"); err != nil {
-		return fmt.Errorf("git was not found in PATH")
+		return "", nil, fmt.Errorf("git was not found in PATH")
 	}
 
 	var abs string
@@ -157,13 +199,14 @@ func run(o project.Options) error {
 	if o.Setup || o.VerifyCmd {
 		abs, err = filepath.Abs(o.Dir)
 		if err != nil {
-			return err
+			return "", nil, err
 		}
 		if info, e := os.Stat(abs); e != nil || !info.IsDir() {
-			return fmt.Errorf("%s is not a directory", o.Dir)
+			return abs, nil, fmt.Errorf("%s is not a directory", o.Dir)
 		}
 		if o.VerifyCmd {
-			return verify.VerifyCommand(abs, o)
+			p, err := verify.VerifyCommand(abs, o)
+			return abs, p, err
 		}
 	} else {
 		url := repos.ExpandURL(o.Url)
@@ -172,19 +215,34 @@ func run(o project.Options) error {
 			dir = repos.RepoName(url)
 		}
 		if abs, err = filepath.Abs(dir); err != nil {
-			return err
+			return "", nil, err
 		}
 		fmt.Printf("Cloning %s\n", url)
 		if err := proc.RunStream("", true, "git", "clone", url, dir); err != nil {
 			if h, ok := explain.FromError(err); ok {
 				explain.Print(h)
 			}
-			return fmt.Errorf("git clone failed: %w", err)
+			return abs, nil, fmt.Errorf("git clone failed: %w", err)
 		}
 	}
 
-	_, err = setupRepo(abs, o, 0)
-	return err
+	p, err := setupRepo(abs, o, 0)
+	if err == nil && o.CI && p != nil {
+		err = ciFailure(p)
+	}
+	return abs, p, err
+}
+
+// ciFailure is the error --ci turns a failed step or verification into, so the exit code is
+// 1. Without --ci a failed step is reported in the guide and the exit code stays 0.
+func ciFailure(p *project.Project) error {
+	if n := failedSteps(p); n > 0 {
+		return fmt.Errorf("%d setup step(s) failed, see above", n)
+	}
+	if p.Verify != nil && verifyBad(p.Verify.Verdict) {
+		return fmt.Errorf("verification: %s", p.Verify.Verdict)
+	}
+	return nil
 }
 
 // setupRepo analyzes, sets up and documents one repository. depth is 0 for the

@@ -106,6 +106,9 @@ The generated guide tells you what to do next:
   verification. `gclone status` shows it and what is out of date, and
   `gclone setup --resume` skips install steps that already succeeded at the same commit.
   The file holds names, commands and notes only, never variable values.
+- **Scripts and CI.** `--ci` never asks or reads the terminal and exits 1 when a step or the
+  verification fails. `--json` prints one JSON result on standard output. See
+  [Use in scripts and CI](#use-in-scripts-and-ci).
 - **Dry run and safety prompts.** See [Safety](#safety-and-security).
 
 ### Experimental
@@ -123,8 +126,7 @@ These are implemented but have only been exercised in limited ways. Please repor
 
 ### Planned
 
-See the [roadmap](#roadmap): `--ci` and `--json` output, and
-reuse of existing `mise.toml`, Dev Container or Makefile setups.
+See the [roadmap](#roadmap): reuse of existing `mise.toml`, Dev Container or Makefile setups.
 
 ## Install
 
@@ -211,14 +213,6 @@ gclone status      # what was done, what failed, what is out of date
 | Compose files | Database services only (postgres, mysql, mariadb, mongo, redis, valkey, rabbitmq). It never starts your app's own containers |
 | Rust, PHP, Ruby | Detected and reported only. No setup yet |
 
-Flask and FastAPI detection prefers module-level app objects. If none is found, gclone
-looks for a top-level `def create_app():` (optionally with a return annotation) in the
-same entry files, such as `app.py`, `main.py` and `app/main.py`. Flask uses
-`flask --app module:create_app run`; FastAPI uses `uvicorn module:create_app --factory`.
-This is a static heuristic, without importing project code. Factories with parameters,
-other names or async definitions still need a manually chosen start command.
-
-
 ## How it works
 
 ```mermaid
@@ -261,11 +255,46 @@ gclone has **no configuration file**. Behaviour is controlled with flags.
 | `--verify` | Run the verification after setup without asking |
 | `--no-build` | Skip the build step when verifying |
 | `--resume` | With `setup`: skip install steps that already succeeded at the same commit |
+| `--ci` | For scripts and CI: never ask or read the terminal (every question is answered no), implies `--yes`, exit code 1 when a step or the verification fails. Add `--verify` to verify as well |
+| `--json` | Print one JSON result on standard output, all other messages go to standard error. With `status`, print the recorded state |
 | `--timeout=SECONDS` | How long verify waits for the app to listen (default 60) |
 | `-v`, `--version` / `-h`, `--help` | Version / help |
 
 Commands: `gclone <repo> [directory]`, `gclone setup [directory]`, `gclone verify [directory]`,
 `gclone status [directory]` (exit code 1 when a step or the last verification failed).
+
+## Use in scripts and CI
+
+`--ci` is for places where nobody can answer a question. Every prompt is answered "no" (so no
+database is installed and no other repository is cloned unless you pass `--install-services`
+or `--clone-deps`), nothing reads the terminal, and the exit code is 1 when a setup step or
+the verification fails. Without `--ci`, a failed step is recorded in the guide and the exit
+code stays 0.
+
+```bash
+gclone setup . --ci --verify         # set up the checked-out repository and verify it
+gclone <repo-url> app --ci --json    # clone, set up, print the result as JSON
+gclone status --json                 # the recorded state as JSON, exit 1 if something failed
+```
+
+`--json` keeps standard output clean: the one JSON document is the only thing on it, and
+every other message goes to standard error. The fields:
+
+| Field | Meaning |
+|---|---|
+| `schema`, `gclone` | JSON format version and gclone version |
+| `ok` | `true` when there was no error, no failed step and the verdict is not `NOT READY` or `INTERRUPTED` |
+| `dir`, `commit` | The folder and the short commit |
+| `detected`, `warnings` | The lines of the "Detected:" and "Warnings:" lists |
+| `steps` | Each step with `where`, `name`, `cmd`, `status` (`ok` or `failed`), `note` and `hint` |
+| `services` | Databases and other services the project needs, with `kind`, `port`, `remote` |
+| `verify` | `verdict`, counts, and every check with `status` (`pass`, `warn`, `fail`, `skip`) |
+| `error` | The error message, when there was one |
+
+Like the state file, it holds names, commands and notes, never variable values. Fields may be
+added; `schema` changes only when one is removed or changes meaning. A GitHub Actions job can
+be as short as `go install github.com/rauni5/gclone@latest` followed by `gclone setup . --ci
+--verify` (the workflow itself has not been run on GitHub yet).
 
 ## Safety and security
 
@@ -305,7 +334,7 @@ Priorities, in order. Dates are deliberately absent.
 **Next**
 - Check the Flutter adapter against the real SDK
 - Deeper Java checks: a real end-to-end run of Maven and Gradle builds
-- `--ci` and `--json` output, integration tests with fixture repositories
+- Integration tests with fixture repositories, run in CI
 
 **Then**
 - Reuse an existing `mise.toml`, `.tool-versions`, Dev Container or Makefile `setup` target
@@ -315,6 +344,7 @@ Priorities, in order. Dates are deliberately absent.
 - An optional LLM planner that only *suggests* steps, always validated and approved by you
 - Analyze a repository before cloning it
 - Multi-repository workspaces
+- A migration report: `gclone analyze --port-to <language>` would list what a project uses (routes, database, packages) and the usual equivalent in another stack, as a checklist. It would not translate code
 
 ## How gclone compares
 

@@ -6,5 +6,6 @@ type Options struct {
 	Verify, VerifyCmd, NoBuild                                         bool
 	Timeout                                                            int
 	Setup, StatusCmd, Resume                                           bool
+	CI, JSON                                                           bool
 	Url, Dir                                                           string
 }

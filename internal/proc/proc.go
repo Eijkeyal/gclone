@@ -29,6 +29,10 @@ func (t *tail) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
+// NoStdin stops commands from reading the terminal, even when the caller asks for it. gclone
+// sets it for --ci, so nothing waits for input that will never come.
+var NoStdin bool
+
 // RunStream runs a command, showing its output as it happens.
 func RunStream(dir string, stdin bool, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
@@ -38,7 +42,7 @@ func RunStream(dir string, stdin bool, name string, args ...string) error {
 	w := io.MultiWriter(os.Stdout, t)
 	cmd.Stdout = w
 	cmd.Stderr = w
-	if stdin {
+	if stdin && !NoStdin {
 		cmd.Stdin = os.Stdin
 	}
 	if err := cmd.Run(); err != nil {
