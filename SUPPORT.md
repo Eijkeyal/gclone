@@ -2,7 +2,7 @@
 
 ## Before you ask
 
-- Read the [README](README.md), especially *Supported today* and *Safety and security*.
+- Read the [install guide](docs/INSTALL.md) (it has a troubleshooting section), the [usage guide](docs/USAGE.md), [what is supported today](docs/SUPPORTED.md) and [safety and security](docs/SAFETY.md).
 - Open `SETUP_GUIDE.md` in the cloned project. It lists what gclone did and what is left
   for you to set.
 - Run `gclone verify` for a quick view of what is failing and why.

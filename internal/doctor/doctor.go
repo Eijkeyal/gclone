@@ -160,6 +160,17 @@ func Run(p *project.Project, env Env) []Check {
 		tool("flutter", "Flutter apps", "--version")
 	}
 
+	// The command the repository ships for its own setup is optional, so a missing tool is a warning.
+	seenOwn := map[string]bool{}
+	for _, s := range p.OwnSetup {
+		if bin := s.Argv[0]; !strings.HasPrefix(bin, "./") && !seenOwn[bin] {
+			seenOwn[bin] = true
+			if !env.Have(bin) {
+				add("Tools", bin, warn, "not found in PATH; the project's own setup ("+s.Shown+") needs it if you use --run-project-setup")
+			}
+		}
+	}
+
 	// What the project's own files ask for (versions, missing files, shared ports)
 	for _, w := range collectWarnings(p) {
 		// A missing tool already has its own line under Tools.

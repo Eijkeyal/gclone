@@ -68,6 +68,16 @@ type GoModule struct {
 }
 
 // JavaProject is one Maven or Gradle project, with Spring Boot details when present.
+// OwnSetup is a setup command the repository ships itself (a Makefile target, a justfile
+// recipe or a script). gclone lists it and runs it only when asked.
+type OwnSetup struct {
+	Dir   string
+	Rel   string
+	Kind  string   // make, just or script
+	Argv  []string // the command, run in Dir
+	Shown string   // how it is written for people
+}
+
 // FlutterProject is one Flutter app (a pubspec.yaml that depends on the Flutter SDK).
 type FlutterProject struct {
 	Dir              string
@@ -147,6 +157,7 @@ type Project struct {
 	JavaProjects    []*JavaProject
 	PyProjects      []*PyProject
 	FlutterProjects []*FlutterProject
+	OwnSetup        []*OwnSetup
 	Composes        []*Compose
 	Needs           []*Need
 	Companions      []*Companion

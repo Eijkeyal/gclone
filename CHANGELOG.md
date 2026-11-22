@@ -7,6 +7,9 @@ include breaking changes.
 
 ## [Unreleased]
 
+### Changed
+- README is now short. Details moved to `docs/`: usage, scripts and CI, Dev Containers, supported projects, safety, comparison, roadmap.
+
 ### Added
 
 - `gclone export devcontainer [directory]`: writes `.devcontainer/devcontainer.json` (and a
@@ -15,6 +18,16 @@ include breaking changes.
   ports and the databases. It asks first, never overwrites, and `--print` shows the files
   without writing. Not yet tried against a real Docker engine or Codespaces. Flutter is not
   included.
+- The repository's own setup command is detected (a `setup`, `bootstrap`, `dev-setup` or
+  `setup-dev` target in a Makefile or justfile, or `bin/setup`, `script/bootstrap`,
+  `scripts/setup.sh` and similar). It is listed in the plan, the guide, `gclone doctor` and the
+  `--json` result, and is never run by default, not even with `--yes` or `--ci`.
+  `gclone setup --run-project-setup` runs it as the last step, after you confirm the plan.
+- `docs/INSTALL.md`: full install guide from Git to Go to gclone for Windows, macOS and Linux, with troubleshooting.
+
+### Fixed
+
+- The message for a folder with no supported project listed only Node.js, Go and Java.
 
 ## [0.2.1] - 2026-11-19
 

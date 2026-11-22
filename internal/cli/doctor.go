@@ -88,5 +88,8 @@ func detected(p *project.Project) []string {
 	for _, a := range adapters.All() {
 		out = append(out, a.Detected(p)...)
 	}
+	for _, s := range p.OwnSetup {
+		out = append(out, s.Rel+": own setup command "+s.Shown+" (runs only with --run-project-setup)")
+	}
 	return out
 }

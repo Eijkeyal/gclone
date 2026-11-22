@@ -94,6 +94,9 @@ func BuildResult(dir string, p *project.Project, err error) Result {
 			r.Detected = append(r.Detected, a.Detected(p)...)
 			r.Warnings = append(r.Warnings, a.Warnings(p)...)
 		}
+		for _, s := range p.OwnSetup {
+			r.Detected = append(r.Detected, s.Rel+": own setup command "+s.Shown+" (runs only with --run-project-setup)")
+		}
 		if p.Verify != nil {
 			f, w := p.Verify.Counts()
 			v := &VerifyResult{Verdict: p.Verify.Verdict, Failed: f, Warnings: w,

@@ -108,6 +108,20 @@ func TestMissingToolNotReportedTwice(t *testing.T) {
 	}
 }
 
+func TestOwnSetupToolMissingIsOnlyAWarning(t *testing.T) {
+	env := fake()
+	env.Have = func(b string) bool { return b != "make" }
+	p := &project.Project{Dir: t.TempDir(), OwnSetup: []*project.OwnSetup{{Rel: ".", Argv: []string{"make", "setup"}, Shown: "make setup"}}}
+	cs := Run(p, env)
+	c := find(cs, "Tools", "make")
+	if c == nil || c.Status != "warn" {
+		t.Fatalf("%+v", c)
+	}
+	if Verdict(cs) != "READY WITH WARNINGS" {
+		t.Error("an optional tool must not make the machine NOT READY")
+	}
+}
+
 func TestDisk(t *testing.T) {
 	env := fake()
 	for free, want := range map[uint64]string{50 << 30: "pass", 1 << 30: "warn", 100 << 20: "fail"} {

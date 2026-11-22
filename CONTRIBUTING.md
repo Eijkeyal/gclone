@@ -49,6 +49,7 @@ internal/
   plan/                  build, show and execute the setup steps
   repos/                 other repositories a project needs (README, local deps, submodules)
   verify/                build, start, port check, HTTP probe, report
+  ownsetup/              finds the repo's own setup command (Makefile, justfile, scripts)
   devcontainer/          `gclone export devcontainer`: builds the .devcontainer files as text
   doctor/                `gclone doctor`: tools, Docker, ports and disk, nothing changed
   guide/                 write SETUP_GUIDE.md
@@ -163,7 +164,7 @@ people do not work on the same one.
 2. Add detection first and test it with plain files in a temporary directory.
 3. Add the action second, behind a prompt or flag if it changes the machine.
 4. Show it in the plan output and in `SETUP_GUIDE.md` so the user can see what happened.
-5. Document the flag or behaviour in the README.
+5. Document the flag or behaviour in the README or the matching file in `docs/` (flags are in `docs/USAGE.md`).
 
 ## Adding support for a new language or framework
 

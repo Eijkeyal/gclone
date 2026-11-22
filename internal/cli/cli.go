@@ -54,6 +54,9 @@ Options:
                         verification fails
       --json            Print one JSON result on standard output; messages go to standard
                         error. With status: print the recorded state as JSON
+      --run-project-setup  Also run the setup command the repo ships (make setup, bin/setup,
+                        a justfile recipe...) as the last step. It can run anything, so
+                        it is never run by default, not even with --yes or --ci
       --print           With export: print the files instead of writing them
       --timeout=SECONDS How long verify waits for the app to listen (default 60)
   -v, --version         Print the version
@@ -100,6 +103,8 @@ func parseArgs(args []string) (project.Options, error) {
 			o.JSON = true
 		case "--print":
 			o.Print = true
+		case "--run-project-setup":
+			o.RunProjectSetup = true
 		case "-v", "--version":
 			fmt.Println("gclone", buildinfo.Version)
 			os.Exit(0)

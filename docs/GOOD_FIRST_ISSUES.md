@@ -53,7 +53,7 @@ help starting one.
 - A compose file with a `rabbitmq` image counts as providing it.
 - `amqps://` and non-local hosts are treated as remote.
 - Tests cover detection and `dockerRunArgs`.
-- The README's service list is updated.
+- The service list in `docs/SUPPORTED.md` is updated.
 
 ---
 
@@ -115,7 +115,7 @@ paths in the guide use forward slashes where they are shown as commands.
 - `go test ./...` passes on Windows in CI.
 - A short note in the PR on what you ran by hand (`gclone --dry-run`, `gclone verify`).
 - Anything that cannot work on Windows is skipped in tests with a reason, and listed in the
-  README's *Experimental* section.
+  `docs/SUPPORTED.md` *Experimental* section.
 
 ---
 
@@ -155,7 +155,7 @@ to standard output (progress text goes to standard error). The exit code stays t
 - Stable, documented field names.
 - Output is valid JSON for ready, warning and failing runs.
 - A test parses the output.
-- The flag is added to the README flag table.
+- The flag is added to the flag table in `docs/USAGE.md`.
 
 ---
 
