@@ -24,7 +24,7 @@ say whether you tested on a real system or only with a fake. -->
 
 - [ ] `gofmt -l .` prints nothing, `go vet ./...` and `go test ./...` pass
 - [ ] I added or updated tests
-- [ ] I updated the README or docs if behaviour changed
+- [ ] I updated the README or the files in `docs/` if behaviour changed
 - [ ] I added a line to `CHANGELOG.md` under **Unreleased**
 - [ ] Anything that installs software, starts a service, clones a repository or runs project
       code asks first (or is behind a flag)

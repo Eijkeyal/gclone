@@ -11,6 +11,7 @@ import (
 	"github.com/rauni5/gclone/internal/adapters"
 	"github.com/rauni5/gclone/internal/compose"
 	"github.com/rauni5/gclone/internal/fsx"
+	"github.com/rauni5/gclone/internal/ownsetup"
 	"github.com/rauni5/gclone/internal/project"
 	"github.com/rauni5/gclone/internal/services"
 )
@@ -24,6 +25,7 @@ func AnalyzeProject(root string) *project.Project {
 	p.Composes = compose.FindComposes(root, p.Pkgs)
 	p.Needs = services.DetectNeeds(p)
 	p.OtherStacks = findOtherStacks(root, handledMarkers(p))
+	p.OwnSetup = ownsetup.Detect(root)
 	return p
 }
 

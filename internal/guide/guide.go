@@ -144,6 +144,19 @@ func WriteGuide(p *project.Project) (string, error) {
 		w("")
 	}
 
+	if len(p.OwnSetup) > 0 {
+		w("## The project's own setup")
+		w("")
+		w("The repository ships its own setup command. gclone did not run it unless it appears under \"What gclone did\". It can run anything, so read it first:")
+		w("")
+		for _, s := range p.OwnSetup {
+			w("- `%s` (in %s)", s.Shown, project.UnitLabel(s.Rel))
+		}
+		w("")
+		w("`gclone setup --run-project-setup` includes it as the last step.")
+		w("")
+	}
+
 	if len(p.OtherStacks) > 0 {
 		w("## Not handled by gclone yet")
 		w("")

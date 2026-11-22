@@ -67,7 +67,7 @@ command, because `npm install` turns into `npm ci` once a lockfile exists.
 There is no Docker engine, winget, brew or apt in most test environments. Tests either work
 on pure functions (parsing, classification, port detection) or use real short-lived Node
 processes (`internal/verify/verify_test.go`). Docker flows were exercised with a stand-in `docker` script on
-`PATH`. That proves the control flow, not real Docker behaviour, which is why the README marks
+`PATH`. That proves the control flow, not real Docker behaviour, which is why SUPPORTED.md marks
 those paths as experimental.
 
 ## Adapters: one per ecosystem
@@ -113,6 +113,7 @@ commands itself. See [COMPETITOR_ANALYSIS.md](COMPETITOR_ANALYSIS.md) for the re
 Packages only depend downwards, so there are no cycles:
 
 ```
+ownsetup -> fsx, project; only reads files
 cli -> guide, plan, repos, verify, doctor, devcontainer, analyze, services, docker, ui, project
 devcontainer -> adapters (the registry), node, java, services, project; builds text, writes nothing
 doctor -> adapters (the registry), python, services, docker, fsx, project; changes nothing

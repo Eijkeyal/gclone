@@ -295,6 +295,32 @@ func TestExportDevcontainer(t *testing.T) {
 	}
 }
 
+// The repository's own setup command is shown, but only runs with --run-project-setup.
+func TestOwnSetupNeedsTheFlag(t *testing.T) {
+	if _, err := exec.LookPath("make"); err != nil {
+		t.Skip("make not found")
+	}
+	dir := t.TempDir()
+	copyDir(t, fixture("go-cli"), dir)
+	os.WriteFile(filepath.Join(dir, "Makefile"), []byte("setup:\n\ttouch ran-own-setup\n"), 0o644)
+	marker := filepath.Join(dir, "ran-own-setup")
+
+	r := do(t, "setup", dir, "--ci", "--no-services")
+	if r.code != 0 || !strings.Contains(r.stdout+r.stderr, "make setup") {
+		t.Fatalf("exit %d\n%s%s", r.code, r.stdout, r.stderr)
+	}
+	if _, err := os.Stat(marker); err == nil {
+		t.Fatal("make setup ran without --run-project-setup")
+	}
+	r = do(t, "setup", dir, "--ci", "--no-services", "--run-project-setup")
+	if r.code != 0 {
+		t.Fatalf("exit %d\n%s%s", r.code, r.stdout, r.stderr)
+	}
+	if _, err := os.Stat(marker); err != nil {
+		t.Error("make setup did not run with --run-project-setup")
+	}
+}
+
 func TestStatusWithoutState(t *testing.T) {
 	r := do(t, "status", t.TempDir())
 	if r.code != 1 || !strings.Contains(r.stderr, "no gclone state") {

@@ -2,6 +2,7 @@ package plan
 
 import (
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -55,13 +56,46 @@ func BuildPlan(p *project.Project, o project.Options) []project.Planned {
 	for _, a := range adapters.All() {
 		plan = append(plan, a.Install(p, o)...)
 	}
+
+	// The repository's own setup runs last, and only when asked for: it can run anything.
+	if o.RunProjectSetup {
+		for _, s := range p.OwnSetup {
+			s := s
+			plan = append(plan, project.Planned{
+				Where: s.Rel,
+				Name:  "Run the project's own setup (" + s.Shown + ")",
+				Cmd:   s.Shown,
+				Run: func() error {
+					if _, err := exec.LookPath(s.Argv[0]); err != nil && !strings.HasPrefix(s.Argv[0], "./") {
+						return fmt.Errorf("%s was not found in PATH, so the project's own setup (%s) was not run", s.Argv[0], s.Shown)
+					}
+					return proc.RunStream(s.Dir, true, s.Argv[0], s.Argv[1:]...)
+				},
+			})
+		}
+	}
 	return plan
+}
+
+// OwnSetupNote tells the reader about setup commands the repository ships, when they are not
+// going to be run. It is "" when there is nothing to say.
+func OwnSetupNote(p *project.Project, o project.Options) string {
+	if len(p.OwnSetup) == 0 || o.RunProjectSetup {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString("This repo has its own setup command (not run, it can run anything):\n")
+	for _, s := range p.OwnSetup {
+		fmt.Fprintf(&b, "  - %s   (in %s)\n", s.Shown, loc(s.Rel))
+	}
+	b.WriteString("  Read it, then add --run-project-setup to include it as the last step.")
+	return b.String()
 }
 
 func PrintPlan(p *project.Project, plan []project.Planned, o project.Options) {
 	fmt.Println()
 	if !p.HasUnits() {
-		fmt.Println("No Node.js, Go or Java project found (no package.json, go.mod, pom.xml or build.gradle at the root or one level down).")
+		fmt.Println("No supported project found (no package.json, go.mod, pom.xml, build.gradle, pyproject.toml, requirements.txt or pubspec.yaml at the root or one level down).")
 		if len(p.OtherStacks) > 0 {
 			fmt.Println("Detected other stacks, which gclone v" + buildinfo.Version + " does not set up yet:")
 			for _, s := range p.OtherStacks {
@@ -106,6 +140,10 @@ func PrintPlan(p *project.Project, plan []project.Planned, o project.Options) {
 			fmt.Println("  - " + s)
 		}
 		fmt.Println("  Use --ignore-scripts to skip these and your dependencies' install scripts.")
+	}
+
+	if note := OwnSetupNote(p, o); note != "" {
+		fmt.Println("\n" + note)
 	}
 
 	if len(plan) == 0 {

@@ -7,6 +7,6 @@ type Options struct {
 	Timeout                                                            int
 	Setup, StatusCmd, Resume                                           bool
 	CI, JSON                                                           bool
-	DoctorCmd, ExportCmd, Print                                        bool
+	DoctorCmd, ExportCmd, Print, RunProjectSetup                       bool
 	Url, Dir                                                           string
 }
