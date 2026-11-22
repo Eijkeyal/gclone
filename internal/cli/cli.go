@@ -33,6 +33,7 @@ Usage:
   gclone verify [directory] [options]    build it, start it, check it answers; exit 1 if not ready
   gclone status [directory]              show what gclone did here and what is out of date
   gclone doctor [directory]              check, without changing anything, that this machine can run it
+  gclone export devcontainer [directory] write .devcontainer/ for Codespaces and VS Code Dev Containers
 
 Options:
   -n, --dry-run         Clone and analyze, show the plan, run nothing else
@@ -53,6 +54,7 @@ Options:
                         verification fails
       --json            Print one JSON result on standard output; messages go to standard
                         error. With status: print the recorded state as JSON
+      --print           With export: print the files instead of writing them
       --timeout=SECONDS How long verify waits for the app to listen (default 60)
   -v, --version         Print the version
   -h, --help            Print this help
@@ -96,6 +98,8 @@ func parseArgs(args []string) (project.Options, error) {
 			o.Yes = true
 		case "--json":
 			o.JSON = true
+		case "--print":
+			o.Print = true
 		case "-v", "--version":
 			fmt.Println("gclone", buildinfo.Version)
 			os.Exit(0)
@@ -116,6 +120,19 @@ func parseArgs(args []string) (project.Options, error) {
 			}
 			pos = append(pos, a)
 		}
+	}
+	if len(pos) > 0 && pos[0] == "export" {
+		if len(pos) < 2 || pos[1] != "devcontainer" {
+			return o, fmt.Errorf("export needs a target: gclone export devcontainer [directory]")
+		}
+		if len(pos) > 3 {
+			return o, fmt.Errorf("export devcontainer takes at most one directory")
+		}
+		o.ExportCmd, o.Dir = true, "."
+		if len(pos) == 3 {
+			o.Dir = pos[2]
+		}
+		return o, nil
 	}
 	if len(pos) > 0 && (pos[0] == "setup" || pos[0] == "verify" || pos[0] == "status" || pos[0] == "doctor") {
 		o.Setup = pos[0] == "setup"
@@ -172,6 +189,13 @@ func Main() {
 			os.Exit(1)
 		}
 		if !ok {
+			os.Exit(1)
+		}
+		return
+	}
+	if o.ExportCmd {
+		if err := runExportDevcontainer(os.Stdout, os.Stderr, o); err != nil {
+			fmt.Fprintln(os.Stderr, "gclone:", err)
 			os.Exit(1)
 		}
 		return
