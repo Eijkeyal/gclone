@@ -264,6 +264,37 @@ func TestDoctorChangesNothing(t *testing.T) {
 	}
 }
 
+func TestExportDevcontainer(t *testing.T) {
+	// --print shows the files and writes nothing into the sample.
+	dir := fixture("go-cli")
+	r := do(t, "export", "devcontainer", dir, "--print")
+	if r.code != 0 || !strings.Contains(r.stdout, `"name": "go-cli"`) || !strings.Contains(r.stdout, "features/go:1") {
+		t.Fatalf("exit %d\n%s\n%s", r.code, r.stdout, r.stderr)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".devcontainer")); err == nil {
+		t.Error("--print created .devcontainer in the fixture")
+	}
+	// A real write into a copy, then a second run must refuse and keep the file.
+	tmp := t.TempDir()
+	copyDir(t, dir, tmp)
+	if w := do(t, "export", "devcontainer", tmp, "--yes"); w.code != 0 {
+		t.Fatalf("write: exit %d\n%s", w.code, w.stderr)
+	}
+	path := filepath.Join(tmp, ".devcontainer", "devcontainer.json")
+	var cfg map[string]interface{}
+	b, err := os.ReadFile(path)
+	if err != nil || json.Unmarshal(b, &cfg) != nil {
+		t.Fatalf("the written file is not JSON: %v\n%s", err, b)
+	}
+	os.WriteFile(path, []byte("{}"), 0o644)
+	if again := do(t, "export", "devcontainer", tmp, "--yes"); again.code != 1 {
+		t.Errorf("a second run must refuse: exit %d", again.code)
+	}
+	if b, _ := os.ReadFile(path); string(b) != "{}" {
+		t.Error("an existing devcontainer.json was overwritten")
+	}
+}
+
 func TestStatusWithoutState(t *testing.T) {
 	r := do(t, "status", t.TempDir())
 	if r.code != 1 || !strings.Contains(r.stderr, "no gclone state") {

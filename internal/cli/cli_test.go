@@ -217,3 +217,66 @@ func TestVerifyJSONRoundTrip(t *testing.T) {
 		})
 	}
 }
+
+func goProject(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module example.com/x\n\ngo 1.24\n"), 0o644)
+	os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n\nfunc main() {}\n"), 0o644)
+	return dir
+}
+
+func TestExportWritesAndNeverOverwrites(t *testing.T) {
+	dir := goProject(t)
+	o := project.Options{Dir: dir, ExportCmd: true, Yes: true}
+	var out, msg bytes.Buffer
+	if err := runExportDevcontainer(&out, &msg, o); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, ".devcontainer", "devcontainer.json")
+	b, err := os.ReadFile(path)
+	if err != nil || !strings.Contains(string(b), "features/go:1") {
+		t.Fatalf("file: %v %s", err, b)
+	}
+	// Second run: refuse, and leave the file as it is.
+	os.WriteFile(path, []byte("mine"), 0o644)
+	if err := runExportDevcontainer(&out, &msg, o); err == nil || !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("must refuse to overwrite, got %v", err)
+	}
+	if b, _ := os.ReadFile(path); string(b) != "mine" {
+		t.Error("an existing file was changed")
+	}
+}
+
+func TestExportPrintWritesNothing(t *testing.T) {
+	dir := goProject(t)
+	var out, msg bytes.Buffer
+	if err := runExportDevcontainer(&out, &msg, project.Options{Dir: dir, ExportCmd: true, Print: true}); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "devcontainer.json") {
+		t.Errorf("nothing printed: %s", out.String())
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".devcontainer")); err == nil {
+		t.Error("--print created a folder")
+	}
+}
+
+func TestExportNeedsAProject(t *testing.T) {
+	if err := runExportDevcontainer(&bytes.Buffer{}, &bytes.Buffer{}, project.Options{Dir: t.TempDir(), ExportCmd: true, Yes: true}); err == nil {
+		t.Error("an empty folder must be an error")
+	}
+}
+
+func TestParseExport(t *testing.T) {
+	o, err := parseArgs([]string{"export", "devcontainer", "app", "--print"})
+	if err != nil || !o.ExportCmd || o.Dir != "app" || !o.Print {
+		t.Errorf("%+v %v", o, err)
+	}
+	if _, err := parseArgs([]string{"export"}); err == nil {
+		t.Error("export without a target must be an error")
+	}
+	if _, err := parseArgs([]string{"export", "terraform"}); err == nil {
+		t.Error("unknown target must be an error")
+	}
+}

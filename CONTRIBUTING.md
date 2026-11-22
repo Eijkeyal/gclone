@@ -49,6 +49,7 @@ internal/
   plan/                  build, show and execute the setup steps
   repos/                 other repositories a project needs (README, local deps, submodules)
   verify/                build, start, port check, HTTP probe, report
+  devcontainer/          `gclone export devcontainer`: builds the .devcontainer files as text
   doctor/                `gclone doctor`: tools, Docker, ports and disk, nothing changed
   guide/                 write SETUP_GUIDE.md
   explain/               plain-language hints for failed commands (a list of patterns)

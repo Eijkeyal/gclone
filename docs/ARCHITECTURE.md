@@ -113,7 +113,8 @@ commands itself. See [COMPETITOR_ANALYSIS.md](COMPETITOR_ANALYSIS.md) for the re
 Packages only depend downwards, so there are no cycles:
 
 ```
-cli -> guide, plan, repos, verify, doctor, analyze, services, docker, ui, project
+cli -> guide, plan, repos, verify, doctor, devcontainer, analyze, services, docker, ui, project
+devcontainer -> adapters (the registry), node, java, services, project; builds text, writes nothing
 doctor -> adapters (the registry), python, services, docker, fsx, project; changes nothing
 verify -> analyze, node, services, project
 analyze -> node, compose, envfile, services

@@ -7,6 +7,15 @@ include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `gclone export devcontainer [directory]`: writes `.devcontainer/devcontainer.json` (and a
+  `docker-compose.yml` when the project needs databases) from what gclone detected: features
+  for Node.js, Go, Java and Python at the wanted versions, the install commands, forwarded
+  ports and the databases. It asks first, never overwrites, and `--print` shows the files
+  without writing. Not yet tried against a real Docker engine or Codespaces. Flutter is not
+  included.
+
 ## [0.2.1] - 2026-11-19
 
 ### Fixed
