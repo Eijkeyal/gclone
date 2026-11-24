@@ -7,8 +7,24 @@ include breaking changes.
 
 ## [Unreleased]
 
-### Changed
-- README is now short. Details moved to `docs/`: usage, scripts and CI, Dev Containers, supported projects, safety, comparison, roadmap.
+## [0.4.0] - 2026-11-24
+
+### Added
+
+- Rust (Cargo) support: finds Cargo packages and workspaces at the root or one folder down,
+  reads `rust-version` and `rust-toolchain(.toml)`, warns when Rust is missing, too old or a
+  pinned toolchain is not installed, spots web frameworks and database crates, runs
+  `cargo fetch`, and builds in `verify`. It works with `gclone doctor` and
+  `gclone export devcontainer`. Servers are built but not started, because the port is not
+  known. Analysis never lets rustup download a toolchain. Tested end to end with a real
+  `cargo` on a small project only.
+
+### Fixed
+
+- The message for a folder with no supported project listed only Node.js, Go and Java. It now
+  lists every supported build file.
+
+## [0.3.0] - 2026-11-24
 
 ### Added
 
@@ -23,12 +39,13 @@ include breaking changes.
   `scripts/setup.sh` and similar). It is listed in the plan, the guide, `gclone doctor` and the
   `--json` result, and is never run by default, not even with `--yes` or `--ci`.
   `gclone setup --run-project-setup` runs it as the last step, after you confirm the plan.
-- `docs/INSTALL.md`: full install guide from Git to Go to gclone for Windows, macOS and Linux, with troubleshooting.
-- Rust (Cargo) support: finds Cargo packages and workspaces, reads `rust-version` and `rust-toolchain`, warns about missing or old Rust, runs `cargo fetch`, and builds in `verify`. Works with `doctor` and `export devcontainer`. Servers are built but not started.
+- `docs/INSTALL.md`: full install guide from Git to Go to gclone for Windows, macOS and Linux,
+  with troubleshooting.
 
-### Fixed
+### Changed
 
-- The message for a folder with no supported project listed only Node.js, Go and Java.
+- The README is now short. Details moved to `docs/`: usage, scripts and CI, Dev Containers,
+  supported projects, safety, comparison, roadmap.
 
 ## [0.2.1] - 2026-11-19
 
@@ -140,7 +157,9 @@ include breaking changes.
   (exceptions: `PORT` as the expected port, and the login of a database container gclone
   creates).
 
-[Unreleased]: https://github.com/rauni5/gclone/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/rauni5/gclone/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/rauni5/gclone/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/rauni5/gclone/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/rauni5/gclone/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/rauni5/gclone/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/rauni5/gclone/compare/v0.1.0...v0.1.1
