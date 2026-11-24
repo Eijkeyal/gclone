@@ -95,7 +95,7 @@ func OwnSetupNote(p *project.Project, o project.Options) string {
 func PrintPlan(p *project.Project, plan []project.Planned, o project.Options) {
 	fmt.Println()
 	if !p.HasUnits() {
-		fmt.Println("No supported project found (no package.json, go.mod, pom.xml, build.gradle, pyproject.toml, requirements.txt or pubspec.yaml at the root or one level down).")
+		fmt.Println("No supported project found (no package.json, go.mod, pom.xml, build.gradle, pyproject.toml, requirements.txt, pubspec.yaml or Cargo.toml at the root or one level down).")
 		if len(p.OtherStacks) > 0 {
 			fmt.Println("Detected other stacks, which gclone v" + buildinfo.Version + " does not set up yet:")
 			for _, s := range p.OtherStacks {

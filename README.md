@@ -18,7 +18,7 @@ starting a database, and discovering that the backend lives in a different repos
 **asks before it changes anything on your machine**, sets it up, checks that the app
 really starts, and writes a `SETUP_GUIDE.md` that says what is left for you to decide.
 
-> **Status: early (0.x).** Node.js is the most tested. Python, Java, Go and Flutter are newer
+> **Status: early (0.x).** Node.js is the most tested. Python, Java, Go, Rust and Flutter are newer
 > and tested less. See [what works today](docs/SUPPORTED.md). Feedback from real repositories
 > is the most useful thing you can give.
 
@@ -97,7 +97,7 @@ Guide written to demo/SETUP_GUIDE.md
 ## Supported today
 
 Node.js (npm, pnpm, yarn, bun), Python (Django, FastAPI, Flask, Streamlit; pip, Poetry, uv,
-Pipenv), Java (Maven, Gradle, Spring Boot), Go and Flutter. How well each one is tested is
+Pipenv), Java (Maven, Gradle, Spring Boot), Go, Rust (Cargo) and Flutter. How well each one is tested is
 stated plainly in [docs/SUPPORTED.md](docs/SUPPORTED.md).
 
 ## Safety

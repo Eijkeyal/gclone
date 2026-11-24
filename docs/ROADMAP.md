@@ -7,6 +7,7 @@ Priorities, in order. Dates are deliberately absent.
 - Deeper Java checks: a real end-to-end run of Maven and Gradle builds
 
 **Then**
+- Rust: start servers (find the port), and hint at system libraries a crate needs (OpenSSL and similar)
 - Read versions from `mise.toml`, and reuse an existing Dev Container
 
 **Later, if there is demand**

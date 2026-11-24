@@ -2,5 +2,5 @@ package project
 
 // HasUnits reports whether any supported ecosystem was found.
 func (p *Project) HasUnits() bool {
-	return len(p.Pkgs)+len(p.GoModules)+len(p.JavaProjects)+len(p.PyProjects)+len(p.FlutterProjects) > 0
+	return len(p.Pkgs)+len(p.GoModules)+len(p.JavaProjects)+len(p.PyProjects)+len(p.FlutterProjects)+len(p.RustProjects) > 0
 }

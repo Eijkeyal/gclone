@@ -24,6 +24,7 @@ include breaking changes.
   `--json` result, and is never run by default, not even with `--yes` or `--ci`.
   `gclone setup --run-project-setup` runs it as the last step, after you confirm the plan.
 - `docs/INSTALL.md`: full install guide from Git to Go to gclone for Windows, macOS and Linux, with troubleshooting.
+- Rust (Cargo) support: finds Cargo packages and workspaces, reads `rust-version` and `rust-toolchain`, warns about missing or old Rust, runs `cargo fetch`, and builds in `verify`. Works with `doctor` and `export devcontainer`. Servers are built but not started.
 
 ### Fixed
 
