@@ -127,6 +127,9 @@ func Run(p *project.Project, env Env) []Check {
 	if len(p.GoModules) > 0 {
 		tool("go", "Go modules", "version")
 	}
+	if len(p.RustProjects) > 0 {
+		tool("cargo", "Rust projects", "--version")
+	}
 	if len(p.JavaProjects) > 0 {
 		tool("java", "Java projects", "-version")
 		for _, j := range p.JavaProjects {

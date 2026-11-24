@@ -70,4 +70,5 @@ See the [roadmap](ROADMAP.md).
 | Repository layout | Root plus one folder level. Workspaces are analyzed at the root only |
 | MongoDB, PostgreSQL, MySQL, Redis, RabbitMQ | Detection tested. Starting them in Docker tested with a stand-in `docker` command, not with a real Docker engine |
 | Compose files | Database services only (postgres, mysql, mariadb, mongo, redis, valkey, rabbitmq). It never starts your app's own containers |
-| Rust, PHP, Ruby | Detected and reported only. No setup yet |
+| Rust (Cargo) | Finds a `Cargo.toml` at the root or one folder down (a workspace is handled from its root), reads the package name, edition and `rust-version`, reads `rust-toolchain(.toml)`, compares the default `rustc` with what the project asks for, spots web frameworks (Axum, Actix Web, Rocket, Poem and others) and database crates (sqlx, Diesel, SeaORM and others), runs `cargo fetch`, and `verify` runs `cargo build`. **It never starts the program**, because it cannot know the port. It never lets rustup download a toolchain while analyzing. **Tested end to end with a real `cargo` on a dependency-free project**; projects with many crates, workspaces, and the pinned-toolchain warning are covered by unit tests only. Crates that need system libraries (OpenSSL and similar) are not detected |
+| PHP, Ruby | Detected and reported only. No setup yet |

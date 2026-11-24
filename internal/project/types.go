@@ -157,6 +157,7 @@ type Project struct {
 	JavaProjects    []*JavaProject
 	PyProjects      []*PyProject
 	FlutterProjects []*FlutterProject
+	RustProjects    []*RustProject
 	OwnSetup        []*OwnSetup
 	Composes        []*Compose
 	Needs           []*Need

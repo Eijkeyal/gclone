@@ -124,6 +124,22 @@ func Build(p *project.Project, name string) (Result, error) {
 		}
 	}
 
+	// Rust
+	if len(p.RustProjects) > 0 {
+		version := "latest"
+		for _, r := range p.RustProjects {
+			if len(r.Toolchain) > 0 && r.Toolchain[0] >= '0' && r.Toolchain[0] <= '9' {
+				version = r.Toolchain
+				break
+			}
+		}
+		cfg.Features["ghcr.io/devcontainers/features/rust:1"] = map[string]interface{}{"version": version}
+		addExt("rust-lang.rust-analyzer")
+		for _, r := range p.RustProjects {
+			in(r.Rel, "cargo fetch")
+		}
+	}
+
 	// Java
 	if len(p.JavaProjects) > 0 {
 		major, maven, gradle := 0, false, false

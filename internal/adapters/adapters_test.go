@@ -41,7 +41,7 @@ func TestAdaptersOnMixedRepository(t *testing.T) {
 		got[a.Name()] = a.Units(p)
 		detected[a.Name()] = a.Detected(p)
 	}
-	want := map[string]int{"Node.js": 1, "Go": 1, "Java": 1, "Python": 2, "Flutter": 1}
+	want := map[string]int{"Node.js": 1, "Go": 1, "Java": 1, "Python": 2, "Flutter": 1, "Rust": 1}
 	for k, v := range want {
 		// At least: adding another fixture under testdata must not break this test.
 		if got[k] < v {
